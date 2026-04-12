@@ -1,0 +1,14 @@
+{
+  "name": "streamlate-e2e",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "playwright test",
+    "test:phase-0": "playwright test tests/phase-0/"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.52.0",
+    "openapi-typescript-codegen": "^0.29.0"
+  }
+}
