@@ -1,8 +1,31 @@
-export function VUMeter({ level = -60 }: { level?: number }) {
-  const pct = Math.max(0, Math.min(100, ((level + 60) / 60) * 100));
+export function VUMeter({
+  level = -60,
+  label,
+}: {
+  level?: number;
+  label?: string;
+}) {
+  const clamped = Math.max(-60, Math.min(0, level));
+  const pct = ((clamped + 60) / 60) * 100;
+
+  const color = pct > 80 ? '#ef4444' : pct > 60 ? '#f59e0b' : '#22c55e';
+
   return (
-    <div style={{ width: '100%', height: 8, background: '#333', borderRadius: 4 }}>
-      <div style={{ width: `${pct}%`, height: '100%', background: '#22c55e', borderRadius: 4 }} />
+    <div
+      role="meter"
+      aria-valuenow={Math.round(clamped)}
+      aria-valuemin={-60}
+      aria-valuemax={0}
+      aria-label={label}
+      data-level={Math.round(clamped)}
+      className="w-full"
+    >
+      <div className="h-3 rounded bg-gray-700 overflow-hidden">
+        <div
+          className="h-full rounded transition-all duration-75"
+          style={{ width: `${pct}%`, backgroundColor: color }}
+        />
+      </div>
     </div>
   );
 }

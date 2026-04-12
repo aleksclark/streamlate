@@ -47,5 +47,20 @@ export default defineConfig({
         },
       },
     },
+    {
+      name: 'phase-3',
+      testMatch: /phase-3\/.*/,
+      use: {
+        browserName: 'chromium',
+        launchOptions: {
+          args: [
+            '--use-fake-ui-for-media-stream',
+            '--use-fake-device-for-media-stream',
+            '--allow-file-access-from-files',
+            '--autoplay-policy=no-user-gesture-required',
+          ],
+        },
+      },
+    },
   ],
 });
