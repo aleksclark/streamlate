@@ -5,12 +5,15 @@ mod auth;
 mod routes;
 mod middleware;
 mod rate_limit;
+mod security;
+mod metrics;
 pub mod signaling;
 pub mod webrtc_peer;
 pub mod session_manager;
 
 use crate::config::AppConfig;
 use crate::db::Database;
+use crate::metrics::Metrics;
 use crate::rate_limit::RateLimiter;
 use crate::session_manager::SessionManager;
 use clap::Parser;
@@ -33,6 +36,7 @@ pub struct AppState {
     pub config: Arc<AppConfig>,
     pub rate_limiter: Arc<RateLimiter>,
     pub session_manager: SessionManager,
+    pub metrics: Metrics,
 }
 
 #[tokio::main]
@@ -68,12 +72,14 @@ async fn main() -> anyhow::Result<()> {
 
     let rate_limiter = Arc::new(RateLimiter::new());
     let session_manager = SessionManager::new(db.clone());
+    let metrics = Metrics::new();
 
     let state = AppState {
         db,
         config: Arc::new(cfg.clone()),
         rate_limiter,
         session_manager,
+        metrics,
     };
 
     let app = routes::build_router(state.clone());

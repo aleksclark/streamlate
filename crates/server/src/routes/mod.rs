@@ -10,13 +10,16 @@ use axum::middleware as axum_mw;
 use axum::Router;
 use utoipa::OpenApi;
 
+use crate::metrics;
 use crate::middleware;
+use crate::security;
 use crate::AppState;
 
 #[derive(OpenApi)]
 #[openapi(
     paths(
         system_routes::health,
+        system_routes::stats,
         auth_routes::login,
         auth_routes::refresh,
         auth_routes::logout,
@@ -40,6 +43,8 @@ use crate::AppState;
     ),
     components(schemas(
         system_routes::HealthResponse,
+        system_routes::HealthChecks,
+        system_routes::StatsResponse,
         auth_routes::LoginRequest,
         auth_routes::LoginResponse,
         auth_routes::RefreshResponse,
@@ -128,7 +133,11 @@ pub fn build_router(state: AppState) -> Router {
         .route_layer(axum_mw::from_fn_with_state(state.clone(), middleware::require_auth));
 
     let system_routes = Router::new()
-        .route("/health", axum::routing::get(system_routes::health));
+        .route("/health", axum::routing::get(system_routes::health))
+        .route("/stats", axum::routing::get(system_routes::stats));
+
+    let metrics_route = Router::new()
+        .route("/metrics", axum::routing::get(metrics::metrics_endpoint));
 
     let openapi_route = Router::new()
         .route("/openapi.json", axum::routing::get(serve_openapi));
@@ -151,9 +160,12 @@ pub fn build_router(state: AppState) -> Router {
         .nest("/api/v1/abc", abc_self_register)
         .nest("/api/v1/sessions", session_routes)
         .nest("/api/v1/system", system_routes)
+        .merge(metrics_route)
         .nest("/api", openapi_route)
         .merge(ws_routes)
         .merge(abc_status_route)
+        .layer(axum_mw::from_fn(security::security_headers))
+        .layer(axum_mw::from_fn_with_state(state.clone(), metrics::metrics_middleware))
         .with_state(state)
 }
 
