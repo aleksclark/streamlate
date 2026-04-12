@@ -40,13 +40,13 @@ export function LoginPage() {
   const isDark = theme === 'dark';
 
   return (
-    <div className={`min-h-screen flex items-center justify-center ${
+    <div className={`min-h-screen flex items-center justify-center px-4 ${
       isDark ? 'bg-gray-950' : 'bg-gray-50'
     }`}>
       <form
         data-testid="login-form"
         onSubmit={handleSubmit}
-        className={`w-full max-w-md p-8 rounded-xl shadow-lg ${
+        className={`w-full max-w-md p-6 sm:p-8 rounded-xl shadow-lg ${
           isDark ? 'bg-gray-900' : 'bg-white'
         }`}
       >

@@ -6,6 +6,8 @@ html, body, #root {
 
 body {
   @apply bg-white text-gray-900;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
+    'Helvetica Neue', Arial, sans-serif;
 }
 
 .dark body {
@@ -13,9 +15,9 @@ body {
 }
 
 input[type="range"]::-webkit-slider-thumb {
-  @apply appearance-none w-4 h-4 rounded-full bg-blue-500 cursor-pointer;
+  @apply appearance-none w-5 h-5 rounded-full bg-blue-500 cursor-pointer;
 }
 
 input[type="range"]::-moz-range-thumb {
-  @apply w-4 h-4 rounded-full bg-blue-500 cursor-pointer border-0;
+  @apply w-5 h-5 rounded-full bg-blue-500 cursor-pointer border-0;
 }
