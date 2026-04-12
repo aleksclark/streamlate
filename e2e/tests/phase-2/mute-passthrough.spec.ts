@@ -27,11 +27,12 @@ test.describe('Mute and Passthrough', () => {
     const session = await api.createSession(adminToken, abcId, 'Mute Test');
     const sessionId = session.data.id;
 
+    const sessionStartPromise = waitForMessage(abcWs, 'session-start', 5000);
     const translatorWs = await connectWs(
       `/ws/translate/${sessionId}?token=${encodeURIComponent(adminToken)}`
     );
     await waitForMessage(translatorWs, 'welcome');
-    await waitForMessage(abcWs, 'session-start', 5000);
+    await sessionStartPromise;
 
     translatorWs.send(JSON.stringify({ type: 'mute', muted: true }));
     await new Promise((r) => setTimeout(r, 500));
@@ -50,11 +51,12 @@ test.describe('Mute and Passthrough', () => {
     const session = await api.createSession(adminToken, abcId, 'Passthrough Test');
     const sessionId = session.data.id;
 
+    const sessionStartPromise = waitForMessage(abcWs, 'session-start', 5000);
     const translatorWs = await connectWs(
       `/ws/translate/${sessionId}?token=${encodeURIComponent(adminToken)}`
     );
     await waitForMessage(translatorWs, 'welcome');
-    await waitForMessage(abcWs, 'session-start', 5000);
+    await sessionStartPromise;
 
     translatorWs.send(JSON.stringify({ type: 'passthrough', enabled: true }));
     await new Promise((r) => setTimeout(r, 500));
@@ -73,20 +75,22 @@ test.describe('Mute and Passthrough', () => {
     const session = await api.createSession(adminToken, abcId, 'Stop Test');
     const sessionId = session.data.id;
 
+    const sessionStartPromise = waitForMessage(abcWs, 'session-start', 5000);
     const translatorWs = await connectWs(
       `/ws/translate/${sessionId}?token=${encodeURIComponent(adminToken)}`
     );
     await waitForMessage(translatorWs, 'welcome');
-    await waitForMessage(abcWs, 'session-start', 5000);
+    await sessionStartPromise;
 
     const listenerWs = await connectWs(`/ws/listen/${sessionId}`);
     await waitForMessage(listenerWs, 'welcome');
 
+    const sessionStopPromise = waitForMessage(abcWs, 'session-stop', 5000);
     const stopRes = await api.stopSession(adminToken, sessionId);
     const stopData = await stopRes.json();
     expect(stopData.state).toBe('completed');
 
-    const sessionStopMsg = await waitForMessage(abcWs, 'session-stop', 5000);
+    const sessionStopMsg = await sessionStopPromise;
     expect(sessionStopMsg.session_id).toBe(sessionId);
 
     const getRes = await api.getSession(adminToken, sessionId);

@@ -39,12 +39,13 @@ test.describe('Audio flow', () => {
     const session = await api.createSession(adminToken, abcId, 'Flow Test');
     const sessionId = session.data.id;
 
+    const sessionStartPromise = waitForMessage(abcWs, 'session-start', 5000);
     const translatorWs = await connectWs(
       `/ws/translate/${sessionId}?token=${encodeURIComponent(adminToken)}`
     );
     await waitForMessage(translatorWs, 'welcome');
 
-    const sessionStart = await waitForMessage(abcWs, 'session-start', 5000);
+    const sessionStart = await sessionStartPromise;
     expect(sessionStart.session_id).toBe(sessionId);
     expect(sessionStart.session_name).toBe('Flow Test');
 
@@ -63,18 +64,20 @@ test.describe('Audio flow', () => {
     const sessionData = await getRes.json();
     expect(['starting', 'active']).toContain(sessionData.state);
 
+    const sessionStartPromise = waitForMessage(abcWs, 'session-start', 5000);
     const translatorWs = await connectWs(
       `/ws/translate/${sessionId}?token=${encodeURIComponent(adminToken)}`
     );
     await waitForMessage(translatorWs, 'welcome');
-    await waitForMessage(abcWs, 'session-start', 5000);
+    await sessionStartPromise;
 
+    const sessionStopPromise = waitForMessage(abcWs, 'session-stop', 5000);
     const stopRes = await api.stopSession(adminToken, sessionId);
     const stopData = await stopRes.json();
     expect(stopData.state).toBe('completed');
     expect(stopData.ended_at).toBeTruthy();
 
-    const sessionStopMsg = await waitForMessage(abcWs, 'session-stop', 5000);
+    const sessionStopMsg = await sessionStopPromise;
     expect(sessionStopMsg.session_id).toBe(sessionId);
 
     translatorWs.close();
@@ -87,10 +90,12 @@ test.describe('Audio flow', () => {
     const session = await api.createSession(adminToken, abcId, 'Multi Listener Test');
     const sessionId = session.data.id;
 
+    const sessionStartPromise = waitForMessage(abcWs, 'session-start', 5000);
     const translatorWs = await connectWs(
       `/ws/translate/${sessionId}?token=${encodeURIComponent(adminToken)}`
     );
     await waitForMessage(translatorWs, 'welcome');
+    await sessionStartPromise;
 
     const listener1 = await connectWs(`/ws/listen/${sessionId}`);
     const w1 = await waitForMessage(listener1, 'welcome');
