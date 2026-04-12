@@ -8,5 +8,29 @@ export default defineConfig({
   reporter: 'list',
   use: {
     baseURL: 'http://localhost:8080',
+    trace: 'on-first-retry',
   },
+  projects: [
+    {
+      name: 'api',
+      testMatch: /phase-1\/.*/,
+      use: {
+        browserName: 'chromium',
+      },
+    },
+    {
+      name: 'chromium',
+      testMatch: /phase-0\/.*/,
+      use: {
+        browserName: 'chromium',
+        launchOptions: {
+          args: [
+            '--use-fake-ui-for-media-stream',
+            '--use-fake-device-for-media-stream',
+            '--allow-file-access-from-files',
+          ],
+        },
+      },
+    },
+  ],
 });

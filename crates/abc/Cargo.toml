@@ -7,6 +7,9 @@ edition = "2021"
 name = "streamlate-abc"
 path = "src/main.rs"
 
+[features]
+headless = []
+
 [dependencies]
 streamlate-common = { path = "../common" }
 tokio = { workspace = true }

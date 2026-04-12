@@ -1,5 +1,37 @@
 .crush
+
+# Rust
+/target
 target/
+**/*.rs.bk
+
+# Node
 node_modules/
+dist/
+*.tsbuildinfo
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# E2E
 e2e/test-results/
 e2e/playwright-report/
+e2e-logs.txt
+
+# Generated
+clients/shared/src/api/generated/
+
+# Database
+*.db
+*.db-wal
+*.db-shm
+
+# Recordings
+/recordings/
