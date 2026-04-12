@@ -1,4 +1,5 @@
 import WebSocket from 'ws';
+import { execSync } from 'child_process';
 import { StreamlateAPI } from './api';
 
 const BASE_URL = process.env.BASE_URL || 'http://localhost:8080';
@@ -8,11 +9,12 @@ export async function getAdminPassword(api: StreamlateAPI): Promise<string> {
   if (process.env.ADMIN_PASSWORD) {
     return process.env.ADMIN_PASSWORD;
   }
-  const candidates = ['admin', 'password', 'test'];
-  for (const p of candidates) {
-    const r = await api.loginRaw('admin@streamlate.local', p);
-    if (r.status === 200) return p;
-  }
+  const logs = execSync(
+    'docker compose -f e2e/docker-compose.yml logs server 2>&1',
+    { cwd: process.env.PROJECT_ROOT || '..', encoding: 'utf-8' }
+  );
+  const match = logs.match(/Password:\s+(\S+)/);
+  if (match) return match[1];
   throw new Error(
     'Cannot determine admin password. Set ADMIN_PASSWORD env var or check server logs.'
   );
