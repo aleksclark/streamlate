@@ -1,0 +1,12 @@
+{
+  "name": "streamlate-e2e",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "playwright test",
+    "test:phase-4": "playwright test tests/phase-4/"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.49.0"
+  }
+}

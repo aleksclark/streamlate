@@ -1,1 +1,4 @@
 .crush
+node_modules/
+dist/
+*.tsbuildinfo
