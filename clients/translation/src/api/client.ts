@@ -272,20 +272,6 @@ export const api = {
   },
 
   recordings: {
-    list(): Promise<RecordingsListResponse> {
-      return fetchWithAuth<RecordingsListResponse>('/recordings');
-    },
-
-    get(id: string): Promise<RecordingResponse> {
-      return fetchWithAuth<RecordingResponse>('/recordings/' + id);
-    },
-
-    delete(id: string): Promise<void> {
-      return fetchWithAuth('/recordings/' + id, { method: 'DELETE' });
-    },
-  },
-
-  recordings: {
     list(params?: { session_id?: string; limit?: number; offset?: number }): Promise<RecordingsListResponse> {
       const qs = new URLSearchParams();
       if (params?.session_id) qs.set('session_id', params.session_id);

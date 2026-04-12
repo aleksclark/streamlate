@@ -158,6 +158,7 @@ export interface RecordingResponse {
 
 export interface RecordingsListResponse {
   items: RecordingResponse[];
+  total_size_bytes: number;
 }
 
 export interface RecordingEvent {
