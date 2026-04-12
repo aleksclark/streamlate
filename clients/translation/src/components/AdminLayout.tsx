@@ -7,6 +7,7 @@ const navItems = [
   { path: '/admin/users', label: 'Users', icon: '👤' },
   { path: '/admin/abcs', label: 'Booths', icon: '🎙' },
   { path: '/admin/sessions', label: 'Sessions', icon: '📡' },
+  { path: '/admin/recordings', label: 'Recordings', icon: '🎵' },
   { path: '/admin/settings', label: 'Settings', icon: '⚙' },
 ];
 

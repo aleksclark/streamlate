@@ -20,6 +20,8 @@ import type {
   UpdateAbcRequest,
   RotateSecretResponse,
   SystemStatsResponse,
+  RecordingsListResponse,
+  RecordingResponse,
 } from './types';
 
 const API_BASE = '/api/v1';
@@ -262,6 +264,20 @@ export const api = {
 
     delete(id: string): Promise<void> {
       return fetchWithAuth('/users/' + id, { method: 'DELETE' });
+    },
+  },
+
+  recordings: {
+    list(): Promise<RecordingsListResponse> {
+      return fetchWithAuth<RecordingsListResponse>('/recordings');
+    },
+
+    get(id: string): Promise<RecordingResponse> {
+      return fetchWithAuth<RecordingResponse>('/recordings/' + id);
+    },
+
+    delete(id: string): Promise<void> {
+      return fetchWithAuth('/recordings/' + id, { method: 'DELETE' });
     },
   },
 };

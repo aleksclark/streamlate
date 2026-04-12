@@ -144,6 +144,21 @@ export interface SystemStatsResponse {
   version: string;
 }
 
+export interface RecordingResponse {
+  id: string;
+  session_id: string;
+  source_path: string;
+  translation_path: string;
+  duration_seconds: number | null;
+  size_bytes: number | null;
+  created_at: string;
+}
+
+export interface RecordingsListResponse {
+  items: RecordingResponse[];
+  total_size_bytes: number;
+}
+
 export type SignalingMessage =
   | { type: 'welcome'; session_id: string }
   | { type: 'offer'; sdp: string }

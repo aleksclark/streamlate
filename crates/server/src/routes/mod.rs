@@ -2,6 +2,7 @@ mod auth_routes;
 mod user_routes;
 mod abc_routes;
 mod session_routes;
+mod recording_routes;
 mod system_routes;
 pub mod ws_routes;
 pub mod health_routes;
@@ -38,6 +39,9 @@ use crate::AppState;
         session_routes::create_session,
         session_routes::get_session,
         session_routes::stop_session,
+        recording_routes::list_recordings,
+        recording_routes::get_recording,
+        recording_routes::delete_recording,
     ),
     components(schemas(
         system_routes::HealthResponse,
@@ -60,6 +64,8 @@ use crate::AppState;
         session_routes::CreateSessionRequest,
         session_routes::SessionResponse,
         session_routes::SessionsListResponse,
+        recording_routes::RecordingResponse,
+        recording_routes::RecordingsListResponse,
         system_routes::SystemStatsResponse,
     ))
 )]
@@ -152,12 +158,23 @@ pub fn build_router(state: AppState) -> Router {
             axum::routing::get(health_routes::get_abc_status),
         );
 
+    let recording_routes = Router::new()
+        .route("/", axum::routing::get(recording_routes::list_recordings))
+        .route(
+            "/{id}",
+            axum::routing::get(recording_routes::get_recording)
+                .delete(recording_routes::delete_recording),
+        )
+        .route_layer(axum_mw::from_fn_with_state(state.clone(), middleware::require_admin))
+        .route_layer(axum_mw::from_fn_with_state(state.clone(), middleware::require_auth));
+
     Router::new()
         .nest("/api/v1/auth", auth_routes)
         .nest("/api/v1/users", user_routes)
         .nest("/api/v1/abcs", abc_routes)
         .nest("/api/v1/abc", abc_self_register)
         .nest("/api/v1/sessions", session_routes)
+        .nest("/api/v1/recordings", recording_routes)
         .nest("/api/v1/system", system_routes)
         .nest("/api", openapi_route)
         .merge(ws_routes)

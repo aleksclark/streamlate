@@ -12,6 +12,7 @@ import { AdminUsers } from './pages/admin/AdminUsers';
 import { AdminAbcs } from './pages/admin/AdminAbcs';
 import { AdminSessions } from './pages/admin/AdminSessions';
 import { AdminSettings } from './pages/admin/AdminSettings';
+import { AdminRecordings } from './pages/admin/AdminRecordings';
 
 export default function App() {
   return (
@@ -71,6 +72,16 @@ export default function App() {
               <AuthGuard>
                 <AdminGuard>
                   <AdminLayout><AdminSessions /></AdminLayout>
+                </AdminGuard>
+              </AuthGuard>
+            }
+          />
+          <Route
+            path="/admin/recordings"
+            element={
+              <AuthGuard>
+                <AdminGuard>
+                  <AdminLayout><AdminRecordings /></AdminLayout>
                 </AdminGuard>
               </AuthGuard>
             }
