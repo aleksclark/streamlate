@@ -6,11 +6,14 @@
   "scripts": {
     "test": "playwright test",
     "test:phase-0": "playwright test tests/phase-0/",
-    "test:phase-1": "playwright test tests/phase-1/"
+    "test:phase-1": "playwright test tests/phase-1/",
+    "test:phase-2": "playwright test tests/phase-2/"
   },
   "devDependencies": {
     "@playwright/test": "^1.52.0",
     "openapi-typescript-codegen": "^0.29.0",
-    "typescript": "^5.7.0"
+    "typescript": "^5.7.0",
+    "ws": "^8.18.0",
+    "@types/ws": "^8.5.0"
   }
 }

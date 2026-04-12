@@ -257,4 +257,31 @@ export class StreamlateAPI {
   async openapi(): Promise<Response> {
     return this.request('GET', '/api/openapi.json');
   }
+
+  async getAbcStatus(abcId: string): Promise<{ abc_id: string; online: boolean }> {
+    const res = await this.request('GET', `/api/v1/abcs/${abcId}/status`);
+    return res.json();
+  }
+
+  async getSessionHealth(
+    token: string,
+    sessionId: string
+  ): Promise<{
+    session_id: string;
+    latency_ms: number;
+    packet_loss: number;
+    jitter_ms: number;
+    bitrate_kbps: number;
+  }> {
+    const res = await this.request('GET', `/api/v1/sessions/${sessionId}/health`, {
+      token,
+    });
+    return res.json();
+  }
+
+  async getSessionHealthRaw(token: string, sessionId: string): Promise<Response> {
+    return this.request('GET', `/api/v1/sessions/${sessionId}/health`, {
+      token,
+    });
+  }
 }

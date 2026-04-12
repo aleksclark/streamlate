@@ -274,5 +274,9 @@ pub async fn stop_session(
         rusqlite::params![now, id],
     )?;
 
+    state.session_manager.send(crate::session_manager::SessionCommand::StopSession {
+        session_id: id.clone(),
+    });
+
     get_session(State(state), Path(id)).await
 }

@@ -3,6 +3,8 @@ mod user_routes;
 mod abc_routes;
 mod session_routes;
 mod system_routes;
+pub mod ws_routes;
+pub mod health_routes;
 
 use axum::middleware as axum_mw;
 use axum::Router;
@@ -10,12 +12,6 @@ use utoipa::OpenApi;
 
 use crate::middleware;
 use crate::AppState;
-
-pub use auth_routes::*;
-pub use user_routes::*;
-pub use abc_routes::*;
-pub use session_routes::*;
-pub use system_routes::*;
 
 #[derive(OpenApi)]
 #[openapi(
@@ -125,6 +121,10 @@ pub fn build_router(state: AppState) -> Router {
             "/{id}/stop",
             axum::routing::post(session_routes::stop_session),
         )
+        .route(
+            "/{id}/health",
+            axum::routing::get(health_routes::get_session_health),
+        )
         .route_layer(axum_mw::from_fn_with_state(state.clone(), middleware::require_auth));
 
     let system_routes = Router::new()
@@ -132,6 +132,17 @@ pub fn build_router(state: AppState) -> Router {
 
     let openapi_route = Router::new()
         .route("/openapi.json", axum::routing::get(serve_openapi));
+
+    let ws_routes = Router::new()
+        .route("/ws/abc/{abc_id}", axum::routing::get(ws_routes::ws_abc))
+        .route("/ws/translate/{session_id}", axum::routing::get(ws_routes::ws_translator))
+        .route("/ws/listen/{session_id}", axum::routing::get(ws_routes::ws_listener));
+
+    let abc_status_route = Router::new()
+        .route(
+            "/api/v1/abcs/{id}/status",
+            axum::routing::get(health_routes::get_abc_status),
+        );
 
     Router::new()
         .nest("/api/v1/auth", auth_routes)
@@ -141,6 +152,8 @@ pub fn build_router(state: AppState) -> Router {
         .nest("/api/v1/sessions", session_routes)
         .nest("/api/v1/system", system_routes)
         .nest("/api", openapi_route)
+        .merge(ws_routes)
+        .merge(abc_status_route)
         .with_state(state)
 }
 
