@@ -1,0 +1,40 @@
+name: E2E Tests
+on: [push, pull_request]
+
+jobs:
+  e2e:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build Docker images
+        run: docker compose -f e2e/docker-compose.yml build
+
+      - name: Start stack
+        run: docker compose -f e2e/docker-compose.yml up -d --wait
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install Playwright
+        run: cd e2e && npm ci && npx playwright install chromium
+
+      - name: Run E2E tests
+        run: cd e2e && npx playwright test
+
+      - name: Collect logs on failure
+        if: failure()
+        run: docker compose -f e2e/docker-compose.yml logs > e2e-logs.txt
+
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: e2e-failure-logs
+          path: |
+            e2e-logs.txt
+            e2e/test-results/
+
+      - name: Teardown
+        if: always()
+        run: docker compose -f e2e/docker-compose.yml down -v
