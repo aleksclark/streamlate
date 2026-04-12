@@ -1,4 +1,4 @@
-import { useTheme } from '@streamlate/shared/hooks/useTheme';
+import { useTheme } from '@streamlate/shared';
 
 export function ThemeToggle() {
   const { dark, toggle } = useTheme();

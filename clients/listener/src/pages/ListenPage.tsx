@@ -1,11 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useParams, useSearchParams, useNavigate } from 'react-router-dom';
 import { getSession, requestListenAccess, fetchActiveSessions, type SessionDetail, type SessionListItem } from '../lib/api';
-import { useListenerWebRTC } from '@streamlate/shared/hooks/useListenerWebRTC';
-import { useAudioAnalyser } from '@streamlate/shared/hooks/useAudioAnalyser';
-import { VUMeter } from '@streamlate/shared/components/VUMeter';
-import { VolumeSlider } from '@streamlate/shared/components/VolumeSlider';
-import { ConnectionStatus } from '@streamlate/shared/components/ConnectionStatus';
+import { useListenerWebRTC, useAudioAnalyser, VUMeter, VolumeSlider, ConnectionStatus } from '@streamlate/shared';
 import { ThemeToggle } from '../components/ThemeToggle';
 import { PinPrompt } from '../components/PinPrompt';
 import { QRShare } from '../components/QRShare';
