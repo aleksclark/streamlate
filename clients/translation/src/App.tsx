@@ -1,13 +1,35 @@
-function App() {
-  return (
-    <div className="min-h-screen bg-gray-950 text-white flex items-center justify-center">
-      <div className="text-center">
-        <h1 className="text-4xl font-bold mb-4">Streamlate</h1>
-        <p className="text-gray-400 text-lg">Translation Client</p>
-        <p className="text-gray-500 mt-2 text-sm">Phase 0 — Scaffold</p>
-      </div>
-    </div>
-  )
-}
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { Layout } from './components/Layout';
+import { AuthGuard } from './components/AuthGuard';
+import { LoginPage } from './pages/LoginPage';
+import { DashboardPage } from './pages/DashboardPage';
+import { SessionPage } from './pages/SessionPage';
 
-export default App
+export default function App() {
+  return (
+    <BrowserRouter>
+      <Layout>
+        <Routes>
+          <Route path="/login" element={<LoginPage />} />
+          <Route
+            path="/"
+            element={
+              <AuthGuard>
+                <DashboardPage />
+              </AuthGuard>
+            }
+          />
+          <Route
+            path="/session/:sessionId"
+            element={
+              <AuthGuard>
+                <SessionPage />
+              </AuthGuard>
+            }
+          />
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </Layout>
+    </BrowserRouter>
+  );
+}

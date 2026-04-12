@@ -1,0 +1,198 @@
+import type {
+  LoginRequest,
+  LoginResponse,
+  RefreshResponse,
+  MeResponse,
+  AbcListResponse,
+  AbcStatus,
+  CreateSessionRequest,
+  SessionResponse,
+  SessionListResponse,
+  SessionHealthResponse,
+  HealthResponse,
+  ApiError,
+} from './types';
+
+const API_BASE = '/api/v1';
+
+export class ApiClientError extends Error {
+  status: number;
+  code: string;
+  details?: Record<string, unknown>;
+
+  constructor(
+    status: number,
+    code: string,
+    message: string,
+    details?: Record<string, unknown>,
+  ) {
+    super(message);
+    this.name = 'ApiClientError';
+    this.status = status;
+    this.code = code;
+    this.details = details;
+  }
+}
+
+type TokenProvider = () => string | null;
+type TokenRefresher = () => Promise<string | null>;
+type OnUnauthorized = () => void;
+
+let _getToken: TokenProvider = () => null;
+let _refreshToken: TokenRefresher = async () => null;
+let _onUnauthorized: OnUnauthorized = () => {};
+let _isRefreshing = false;
+let _refreshPromise: Promise<string | null> | null = null;
+
+export function configureApiClient(opts: {
+  getToken: TokenProvider;
+  refreshToken: TokenRefresher;
+  onUnauthorized: OnUnauthorized;
+}) {
+  _getToken = opts.getToken;
+  _refreshToken = opts.refreshToken;
+  _onUnauthorized = opts.onUnauthorized;
+}
+
+async function handleResponse<T>(res: Response): Promise<T> {
+  if (!res.ok) {
+    let apiErr: ApiError | null = null;
+    try {
+      apiErr = await res.json() as ApiError;
+    } catch {
+      // ignore parse errors
+    }
+    throw new ApiClientError(
+      res.status,
+      apiErr?.error?.code ?? 'unknown',
+      apiErr?.error?.message ?? `HTTP ${res.status}`,
+      apiErr?.error?.details,
+    );
+  }
+  if (res.status === 204) return undefined as T;
+  return res.json() as Promise<T>;
+}
+
+async function fetchWithAuth<T>(
+  path: string,
+  init: RequestInit = {},
+  retry = true,
+): Promise<T> {
+  const token = _getToken();
+  const headers = new Headers(init.headers);
+  if (token) {
+    headers.set('Authorization', `Bearer ${token}`);
+  }
+  if (!headers.has('Content-Type') && init.body) {
+    headers.set('Content-Type', 'application/json');
+  }
+
+  const res = await fetch(`${API_BASE}${path}`, { ...init, headers, credentials: 'include' });
+
+  if (res.status === 401 && retry) {
+    const newToken = await doRefresh();
+    if (newToken) {
+      return fetchWithAuth<T>(path, init, false);
+    }
+    _onUnauthorized();
+    throw new ApiClientError(401, 'unauthorized', 'Session expired');
+  }
+
+  return handleResponse<T>(res);
+}
+
+async function doRefresh(): Promise<string | null> {
+  if (_isRefreshing && _refreshPromise) {
+    return _refreshPromise;
+  }
+  _isRefreshing = true;
+  _refreshPromise = _refreshToken();
+  try {
+    const token = await _refreshPromise;
+    return token;
+  } finally {
+    _isRefreshing = false;
+    _refreshPromise = null;
+  }
+}
+
+export const api = {
+  auth: {
+    async login(data: LoginRequest): Promise<LoginResponse> {
+      const res = await fetch(`${API_BASE}/auth/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+        credentials: 'include',
+      });
+      return handleResponse<LoginResponse>(res);
+    },
+
+    async refresh(): Promise<RefreshResponse> {
+      const res = await fetch(`${API_BASE}/auth/refresh`, {
+        method: 'POST',
+        credentials: 'include',
+      });
+      return handleResponse<RefreshResponse>(res);
+    },
+
+    async logout(): Promise<void> {
+      const token = _getToken();
+      await fetch(`${API_BASE}/auth/logout`, {
+        method: 'POST',
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+        credentials: 'include',
+      }).catch(() => {});
+    },
+
+    me(): Promise<MeResponse> {
+      return fetchWithAuth<MeResponse>('/auth/me');
+    },
+  },
+
+  abcs: {
+    list(): Promise<AbcListResponse> {
+      return fetchWithAuth<AbcListResponse>('/abcs');
+    },
+
+    async status(abcId: string): Promise<AbcStatus> {
+      const res = await fetch(`${API_BASE}/abcs/${abcId}/status`);
+      return handleResponse<AbcStatus>(res);
+    },
+  },
+
+  sessions: {
+    list(state?: string): Promise<SessionListResponse> {
+      const qs = state ? `?state=${state}` : '';
+      return fetchWithAuth<SessionListResponse>(`/sessions${qs}`);
+    },
+
+    create(data: CreateSessionRequest): Promise<SessionResponse> {
+      return fetchWithAuth<SessionResponse>('/sessions', {
+        method: 'POST',
+        body: JSON.stringify(data),
+      });
+    },
+
+    get(id: string): Promise<SessionResponse> {
+      return fetchWithAuth<SessionResponse>(`/sessions/${id}`);
+    },
+
+    stop(id: string): Promise<SessionResponse> {
+      return fetchWithAuth<SessionResponse>(`/sessions/${id}/stop`, {
+        method: 'POST',
+      });
+    },
+
+    health(id: string): Promise<SessionHealthResponse> {
+      return fetchWithAuth<SessionHealthResponse>(`/sessions/${id}/health`);
+    },
+  },
+
+  system: {
+    async health(): Promise<HealthResponse> {
+      const res = await fetch(`${API_BASE}/system/health`);
+      return handleResponse<HealthResponse>(res);
+    },
+  },
+};
