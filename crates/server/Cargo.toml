@@ -1,0 +1,62 @@
+[package]
+name = "streamlate-server"
+version = "0.1.0"
+edition = "2021"
+
+[[bin]]
+name = "streamlate-server"
+path = "src/main.rs"
+
+[dependencies]
+streamlate-common = { path = "../common" }
+
+# Async runtime
+tokio = { workspace = true }
+
+# Serialization
+serde = { workspace = true }
+serde_json = { workspace = true }
+
+# IDs and time
+uuid = { workspace = true }
+chrono = { workspace = true }
+
+# Logging
+tracing = { workspace = true }
+tracing-subscriber = { workspace = true }
+
+# Error handling
+thiserror = { workspace = true }
+anyhow = { workspace = true }
+
+# HTTP framework
+axum = { version = "0.8", features = ["macros"] }
+axum-extra = { version = "0.10", features = ["cookie", "typed-header"] }
+tower = { version = "0.5", features = ["util"] }
+tower-http = { version = "0.6", features = ["cors", "trace"] }
+
+# Database
+rusqlite = { version = "0.32", features = ["bundled"] }
+r2d2 = "0.8"
+r2d2_sqlite = "0.25"
+
+# Auth
+argon2 = "0.5"
+jsonwebtoken = "9"
+rand = "0.8"
+base64 = "0.22"
+sha2 = "0.10"
+hex = "0.4"
+
+# Config
+config = { version = "0.14", features = ["toml"] }
+clap = { version = "4", features = ["derive"] }
+
+# OpenAPI
+utoipa = { version = "5", features = ["axum_extras", "chrono", "uuid"] }
+
+# Rate limiting
+dashmap = "6"
+
+# Time
+time = "0.3"

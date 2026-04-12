@@ -1,0 +1,23 @@
+services:
+  server:
+    build:
+      context: ..
+      dockerfile: e2e/docker/Dockerfile.server
+    ports:
+      - "8080:8080"
+    environment:
+      STREAMLATE_JWT_SECRET: "e2e-test-secret"
+      STREAMLATE_LOG_LEVEL: "debug"
+      STREAMLATE_BIND: "0.0.0.0:8080"
+      STREAMLATE_DB_PATH: "/data/streamlate-e2e.db"
+      STREAMLATE_ACCESS_TOKEN_TTL: "5"
+    volumes:
+      - server-data:/data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/api/v1/system/health"]
+      interval: 2s
+      timeout: 5s
+      retries: 30
+
+volumes:
+  server-data:
