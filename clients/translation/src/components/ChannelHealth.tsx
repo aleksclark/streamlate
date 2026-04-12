@@ -25,7 +25,7 @@ export function ChannelHealth({ health }: ChannelHealthProps) {
   const qColor = qualityColor(health.latency_ms, health.packet_loss);
 
   return (
-    <div className={`rounded-lg p-4 ${
+    <div data-testid="channel-health" className={`rounded-lg p-4 ${
       theme === 'dark' ? 'bg-gray-900' : 'bg-white border border-gray-200'
     }`}>
       <div className="flex items-center gap-2 mb-3">

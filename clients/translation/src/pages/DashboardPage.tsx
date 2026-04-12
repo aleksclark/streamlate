@@ -104,7 +104,7 @@ export function DashboardPage() {
                 </div>
               </div>
               <button
-                data-testid={`abc-start-${abc.id}`}
+                data-testid={`start-${abc.id}`}
                 onClick={() => handleStart(abc.id)}
                 disabled={!abc.online}
                 className="px-4 py-1.5 text-sm font-medium bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"

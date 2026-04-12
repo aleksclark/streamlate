@@ -17,7 +17,7 @@ export function ConnectionStatus({ state, className = '' }: ConnectionStatusProp
   const { color, label, pulse } = statusConfig[state];
 
   return (
-    <div className={`flex items-center gap-2 ${className}`} data-testid="connection-status">
+    <div className={`flex items-center gap-2 ${className}`} data-testid="connection-status" data-state={state}>
       <span className={`inline-block w-2.5 h-2.5 rounded-full ${color} ${pulse ? 'animate-pulse' : ''}`} />
       <span className="text-sm text-gray-600 dark:text-gray-300" data-testid="connection-status-text">{label}</span>
     </div>

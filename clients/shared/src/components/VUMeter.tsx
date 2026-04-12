@@ -1,15 +1,25 @@
 interface VUMeterProps {
   level: number;
-  rmsDb: number;
+  rmsDb?: number;
   className?: string;
+  label?: string;
+  'data-testid'?: string;
 }
 
-export function VUMeter({ level, rmsDb, className = '' }: VUMeterProps) {
+export function VUMeter({ level, rmsDb, className = '', label, 'data-testid': testId }: VUMeterProps) {
   const segments = 30;
   const activeSegments = Math.round(level * segments);
 
   return (
-    <div className={`w-full ${className}`} data-testid="vu-meter" data-level={level} data-rms-db={rmsDb}>
+    <div
+      className={`w-full ${className}`}
+      data-testid={testId || 'vu-meter'}
+      data-level={level}
+      data-rms-db={rmsDb}
+      aria-label={label}
+      aria-valuenow={Math.round(level * 100)}
+      role="meter"
+    >
       <div className="flex gap-0.5 h-8 items-end">
         {Array.from({ length: segments }, (_, i) => {
           const active = i < activeSegments;

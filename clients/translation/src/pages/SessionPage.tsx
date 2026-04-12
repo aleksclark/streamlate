@@ -62,15 +62,15 @@ export function SessionPage() {
   const isDark = theme === 'dark';
 
   return (
-    <div className="p-4 sm:p-6 max-w-3xl mx-auto">
+    <div className="p-4 sm:p-6 max-w-3xl mx-auto" data-testid="session-view">
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className={`text-xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
             {session?.session_name ?? 'Translation Session'}
           </h1>
           <div className="flex items-center gap-4 mt-1">
-            <ConnectionStatus state={connectionState} />
-            <span className={`text-sm tabular-nums ${
+            <ConnectionStatus state={connectionState} data-testid="connection-status" />
+            <span data-testid="session-duration" className={`text-sm tabular-nums ${
               isDark ? 'text-gray-400' : 'text-gray-600'
             }`}>
               {formatDuration(duration)}
@@ -78,6 +78,7 @@ export function SessionPage() {
           </div>
         </div>
         <button
+          data-testid="end-session"
           onClick={handleEndSession}
           className="px-4 py-2 text-sm font-medium bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
         >
@@ -108,7 +109,7 @@ export function SessionPage() {
             Source Audio (from booth)
           </h2>
           <div className="space-y-3">
-            <VUMeter level={audio.sourceLevel} label="Level" />
+            <VUMeter level={audio.sourceLevel} label="Source audio level" data-testid="source-vu" />
             <VolumeSlider
               value={audio.sourceVolume}
               onChange={setSourceVolume}
@@ -126,7 +127,7 @@ export function SessionPage() {
             Your Translation
           </h2>
           <div className="space-y-3">
-            <VUMeter level={audio.translationLevel} label="Level" />
+            <VUMeter level={audio.translationLevel} label="Translation audio level" data-testid="translation-vu" />
             <VolumeSlider
               value={audio.translationVolume}
               onChange={setTranslationVolume}
@@ -137,7 +138,9 @@ export function SessionPage() {
 
         <div className="flex gap-3">
           <button
+            data-testid="mute-button"
             onClick={() => setMuted(!audio.isMuted)}
+            data-muted={audio.isMuted ? 'true' : 'false'}
             className={`flex-1 py-3 px-4 rounded-lg font-medium text-sm transition-colors flex items-center justify-center gap-2 ${
               audio.isMuted
                 ? 'bg-red-600 text-white hover:bg-red-700'
@@ -161,7 +164,9 @@ export function SessionPage() {
           </button>
 
           <button
+            data-testid="passthrough-button"
             onClick={() => setPassthrough(!audio.isPassthrough)}
+            data-passthrough={audio.isPassthrough ? 'true' : 'false'}
             className={`flex-1 py-3 px-4 rounded-lg font-medium text-sm transition-colors flex items-center justify-center gap-2 ${
               audio.isPassthrough
                 ? 'bg-blue-600 text-white hover:bg-blue-700'
