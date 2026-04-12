@@ -50,11 +50,12 @@ test.describe('Reconnection handling', () => {
     const session = await api.createSession(adminToken, abcId, 'Reconnect Session');
     const sessionId = session.data.id;
 
+    const sessionStartPromise = waitForMessage(abcWs, 'session-start', 5000);
     const translatorWs1 = await connectWs(
       `/ws/translate/${sessionId}?token=${encodeURIComponent(adminToken)}`
     );
     await waitForMessage(translatorWs1, 'welcome');
-    await waitForMessage(abcWs, 'session-start', 5000);
+    await sessionStartPromise;
 
     translatorWs1.close();
     await new Promise((r) => setTimeout(r, 500));
@@ -102,11 +103,12 @@ test.describe('Reconnection handling', () => {
     const session = await api.createSession(adminToken, abcId, 'Health Test');
     const sessionId = session.data.id;
 
+    const sessionStartPromise = waitForMessage(abcWs, 'session-start', 5000);
     const translatorWs = await connectWs(
       `/ws/translate/${sessionId}?token=${encodeURIComponent(adminToken)}`
     );
     await waitForMessage(translatorWs, 'welcome');
-    await waitForMessage(abcWs, 'session-start', 5000);
+    await sessionStartPromise;
 
     await new Promise((r) => setTimeout(r, 2000));
 
