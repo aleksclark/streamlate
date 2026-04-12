@@ -594,7 +594,7 @@ impl SessionManagerActor {
         listener_id: &str,
         ws_tx: mpsc::UnboundedSender<SignalingMessage>,
     ) {
-        if self.sessions.get(session_id).is_none() {
+        if !self.sessions.contains_key(session_id) {
             return;
         }
 

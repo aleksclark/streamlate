@@ -310,4 +310,19 @@ export class StreamlateAPI {
       token,
     });
   }
+
+  async stats(): Promise<{
+    active_sessions: number;
+    total_users: number;
+    total_abcs: number;
+    total_recordings: number;
+  }> {
+    const res = await this.request('GET', '/api/v1/system/stats');
+    return res.json();
+  }
+
+  async metrics(): Promise<string> {
+    const res = await fetch(`${this.baseUrl}/metrics`);
+    return res.text();
+  }
 }
