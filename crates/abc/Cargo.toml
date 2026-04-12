@@ -1,13 +1,14 @@
 [package]
 name = "streamlate-abc"
-version = "0.1.0"
-edition = "2021"
+version.workspace = true
+edition.workspace = true
 
 [[bin]]
 name = "streamlate-abc"
 path = "src/main.rs"
 
 [features]
+default = []
 headless = []
 
 [dependencies]
@@ -15,15 +16,19 @@ streamlate-common = { path = "../common" }
 tokio = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
+uuid = { workspace = true }
 tracing = { workspace = true }
 tracing-subscriber = { workspace = true }
 anyhow = { workspace = true }
-uuid = { workspace = true }
-webrtc = "0.12"
-futures-util = "0.3"
+thiserror = { workspace = true }
+chrono = { workspace = true }
+toml = "0.8"
+reqwest = { version = "0.12", features = ["json"] }
 tokio-tungstenite = { version = "0.26", features = ["native-tls"] }
-reqwest = { version = "0.12", default-features = false, features = ["json", "native-tls"] }
-axum = { version = "0.8", features = ["macros"] }
-audiopus = "0.3.0-rc.0"
-rand = "0.8"
+futures-util = "0.3"
+webrtc = "0.12"
+axum = { version = "0.8", features = [] }
+url = "2"
+opus = "0.3"
 bytes = "1"
+tokio-util = "0.7"

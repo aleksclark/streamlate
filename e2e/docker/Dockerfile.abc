@@ -1,0 +1,12 @@
+FROM rust:1-bookworm AS builder
+RUN apt-get update && apt-get install -y pkg-config libopus-dev && rm -rf /var/lib/apt/lists/*
+WORKDIR /src
+COPY Cargo.toml Cargo.lock* ./
+COPY crates/ crates/
+RUN cargo build --release -p streamlate-abc --features headless
+
+FROM debian:bookworm-slim
+RUN apt-get update && apt-get install -y ca-certificates libopus0 && rm -rf /var/lib/apt/lists/*
+COPY --from=builder /src/target/release/streamlate-abc /usr/local/bin/
+ENV STREAMLATE_LOG_LEVEL=info
+CMD ["streamlate-abc"]
