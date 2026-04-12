@@ -11,6 +11,7 @@ import type {
   SessionHealthResponse,
   HealthResponse,
   RecordingsListResponse,
+  RecordingResponse,
   RecordingMetadataResponse,
   StorageStatsResponse,
   BulkDeleteResponse,
@@ -24,8 +25,6 @@ import type {
   UpdateAbcRequest,
   RotateSecretResponse,
   SystemStatsResponse,
-  RecordingsListResponse,
-  RecordingResponse,
 } from './types';
 
 const API_BASE = '/api/v1';
