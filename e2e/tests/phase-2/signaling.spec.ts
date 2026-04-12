@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test';
 import { StreamlateAPI } from '../../fixtures/api';
-import { getAdminPassword, connectWs, connectAndWaitWelcome, waitForMessage } from '../../fixtures/ws-helpers';
+import { adminLogin, connectWs, connectAndWaitWelcome, waitForMessage } from '../../fixtures/ws-helpers';
 
 const BASE_URL = process.env.BASE_URL || 'http://localhost:8080';
 
@@ -12,9 +12,8 @@ let abcSecret: string;
 test.beforeAll(async () => {
   api = new StreamlateAPI(BASE_URL);
   await api.waitReady(30000);
-  const password = await getAdminPassword(api);
-  const login = await api.login('admin@streamlate.local', password);
-  adminToken = login.data.access_token;
+  const { token } = await adminLogin(api);
+  adminToken = token;
   const abc = await api.createAbc(adminToken, 'Signaling Test Booth');
   abcId = abc.data.id;
   abcSecret = abc.data.secret;
@@ -84,10 +83,11 @@ test.describe('WebSocket signaling', () => {
   });
 
   test('Ping/pong keepalive works', async () => {
-    const ws = await connectWs(`/ws/abc/${abcId}?token=${encodeURIComponent(abcSecret)}`);
-    await waitForMessage(ws, 'welcome');
-    ws.send(JSON.stringify({ type: 'ping' }));
-    const pong = await waitForMessage(ws, 'ping', 20000);
+    const { ws } = await connectAndWaitWelcome(`/ws/abc/${abcId}?token=${encodeURIComponent(abcSecret)}`);
+    // Server sends periodic pings every 15s; wait up to 20s for one
+    const ping = await waitForMessage(ws, 'ping', 20000);
+    expect(ping.type).toBe('ping');
+    ws.send(JSON.stringify({ type: 'pong' }));
     ws.close();
   });
 });

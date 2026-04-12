@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test';
 import { StreamlateAPI } from '../../fixtures/api';
-import { getAdminPassword } from '../../fixtures/ws-helpers';
+import { adminLogin } from '../../fixtures/ws-helpers';
 
 const BASE_URL = process.env.BASE_URL || 'http://localhost:8080';
 const CLIENT_URL = process.env.TRANSLATION_CLIENT_URL || 'http://localhost:3001';
@@ -13,7 +13,8 @@ test.beforeAll(async () => {
   api = new StreamlateAPI(BASE_URL);
   await api.waitReady(30000);
   adminEmail = 'admin@streamlate.local';
-  adminPassword = await getAdminPassword(api);
+  const loginResult = await adminLogin(api);
+  adminPassword = loginResult.password;
 });
 
 test.describe('Login flow', () => {

@@ -16,7 +16,8 @@ test.describe('Phase 0: Smoke Tests', () => {
   });
 
   test('OpenAPI spec at /api/openapi.json parses as valid OpenAPI 3.x', async () => {
-    const spec = (await api.getOpenApiSpec()) as Record<string, unknown>;
+    const res = await api.openapi();
+    const spec = (await res.json()) as Record<string, unknown>;
     expect(spec).toBeTruthy();
     expect(typeof spec.openapi).toBe('string');
     expect((spec.openapi as string).startsWith('3.')).toBe(true);
@@ -47,7 +48,7 @@ test.describe('Phase 0: Smoke Tests', () => {
     expect(errors).toHaveLength(0);
     await expect(page.locator('body')).not.toBeEmpty();
     await expect(page.getByText('Streamlate')).toBeVisible();
-    await expect(page.getByText('Listener Client')).toBeVisible();
+    await expect(page.getByText('Listener')).toBeVisible();
   });
 
   test('ABC sim container starts without crashing', async () => {

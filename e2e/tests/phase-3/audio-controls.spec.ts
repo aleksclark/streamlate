@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test';
 import { StreamlateAPI } from '../../fixtures/api';
-import { getAdminPassword, connectAndWaitWelcome } from '../../fixtures/ws-helpers';
+import { adminLogin, connectAndWaitWelcome } from '../../fixtures/ws-helpers';
 
 const BASE_URL = process.env.BASE_URL || 'http://localhost:8080';
 const CLIENT_URL = process.env.TRANSLATION_CLIENT_URL || 'http://localhost:3001';
@@ -16,9 +16,9 @@ test.beforeAll(async () => {
   api = new StreamlateAPI(BASE_URL);
   await api.waitReady(30000);
   adminEmail = 'admin@streamlate.local';
-  adminPassword = await getAdminPassword(api);
-  const login = await api.login(adminEmail, adminPassword);
-  adminToken = login.data.access_token;
+  const loginResult = await adminLogin(api);
+  adminPassword = loginResult.password;
+  adminToken = loginResult.token;
   const abc = await api.createAbc(adminToken, 'Audio Controls Booth');
   abcId = abc.data.id;
   abcSecret = abc.data.secret;

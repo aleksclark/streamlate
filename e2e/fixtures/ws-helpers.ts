@@ -20,6 +20,34 @@ export async function getAdminPassword(api: StreamlateAPI): Promise<string> {
   );
 }
 
+/**
+ * Login as admin, retrying on 429 (rate-limit) with exponential backoff.
+ * Use this instead of raw api.login() in beforeAll blocks that might run
+ * after the rate-limit test.
+ */
+export async function adminLogin(
+  api: StreamlateAPI,
+  maxRetries = 10,
+  initialDelayMs = 2000
+): Promise<{ token: string; password: string }> {
+  const password = await getAdminPassword(api);
+  let delay = initialDelayMs;
+  for (let i = 0; i < maxRetries; i++) {
+    const res = await api.loginRaw('admin@streamlate.local', password);
+    if (res.status === 200) {
+      const data = await res.json() as { access_token: string };
+      return { token: data.access_token, password };
+    }
+    if (res.status === 429 || res.status === 401) {
+      await new Promise((r) => setTimeout(r, delay));
+      delay = Math.min(delay * 1.5, 10000);
+      continue;
+    }
+    throw new Error(`Login failed with status ${res.status}`);
+  }
+  throw new Error(`Admin login failed after ${maxRetries} retries (rate-limited)`);
+}
+
 export function connectWs(path: string): Promise<WebSocket> {
   return new Promise((resolve, reject) => {
     const ws = new WebSocket(`${WS_URL}${path}`);

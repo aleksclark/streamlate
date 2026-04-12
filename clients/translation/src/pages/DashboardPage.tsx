@@ -79,7 +79,8 @@ export function DashboardPage() {
           {abcs.map((abc) => (
             <div
               key={abc.id}
-              data-testid={`abc-item-${abc.id}`}
+              data-testid={`abc-${abc.id}`}
+              data-abc-status={abc.online ? 'idle' : 'offline'}
               className={`flex items-center justify-between p-4 rounded-lg transition-colors ${
                 isDark
                   ? 'bg-gray-900 hover:bg-gray-800/80'

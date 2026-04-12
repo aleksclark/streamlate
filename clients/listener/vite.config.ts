@@ -9,6 +9,7 @@ export default defineConfig({
     alias: {
       '@streamlate/shared': path.resolve(__dirname, '../shared/src/index.ts'),
     },
+    dedupe: ['react', 'react-dom'],
   },
   server: {
     port: 3002,
