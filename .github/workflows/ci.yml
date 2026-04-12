@@ -1,0 +1,60 @@
+name: CI
+on: [push, pull_request]
+
+jobs:
+  rust:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+      - uses: Swatinem/rust-cache@v2
+      - name: Check formatting
+        run: cargo fmt --check
+      - name: Clippy
+        run: cargo clippy -- -D warnings
+      - name: Test
+        run: cargo test --workspace
+      - name: Build release
+        run: cargo build --release --workspace
+
+  frontend:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        client: [translation, listener]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install shared deps
+        run: cd clients/shared && npm install
+      - name: Install deps
+        run: cd clients/${{ matrix.client }} && npm ci
+      - name: Typecheck
+        run: cd clients/${{ matrix.client }} && npx tsc -b --noEmit
+      - name: Build
+        run: cd clients/${{ matrix.client }} && npm run build
+
+  codegen:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install e2e deps
+        run: cd e2e && npm ci
+      - name: Generate OpenAPI spec
+        run: cargo run -p streamlate-server -- --export-openapi > openapi.json
+      - name: Validate spec
+        run: |
+          node -e "
+            const spec = JSON.parse(require('fs').readFileSync('openapi.json', 'utf8'));
+            if (!spec.openapi.startsWith('3.')) process.exit(1);
+            console.log('Valid OpenAPI', spec.openapi);
+          "

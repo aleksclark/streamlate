@@ -1,0 +1,20 @@
+[package]
+name = "streamlate-abc"
+version = "0.1.0"
+edition = "2021"
+
+[[bin]]
+name = "streamlate-abc"
+path = "src/main.rs"
+
+[features]
+headless = []
+
+[dependencies]
+streamlate-common = { path = "../common" }
+tokio = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+tracing = { workspace = true }
+tracing-subscriber = { workspace = true }
+anyhow = { workspace = true }
