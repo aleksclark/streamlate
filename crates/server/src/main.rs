@@ -5,6 +5,7 @@ mod auth;
 mod routes;
 mod middleware;
 mod rate_limit;
+pub mod recording;
 pub mod signaling;
 pub mod webrtc_peer;
 pub mod session_manager;
@@ -67,7 +68,14 @@ async fn main() -> anyhow::Result<()> {
     db::bootstrap::maybe_create_admin(&db)?;
 
     let rate_limiter = Arc::new(RateLimiter::new());
-    let session_manager = SessionManager::new(db.clone());
+    let session_manager = SessionManager::new(db.clone(), cfg.recording.clone());
+
+    let recording_path = std::path::Path::new(&cfg.recording.path);
+    match recording::recovery::recover_incomplete_recordings(recording_path, &db) {
+        Ok(n) if n > 0 => tracing::info!("Recovered {} incomplete recordings", n),
+        Err(e) => tracing::error!("Failed to run recording recovery: {}", e),
+        _ => {}
+    }
 
     let state = AppState {
         db,

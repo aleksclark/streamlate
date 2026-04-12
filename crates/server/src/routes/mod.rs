@@ -3,6 +3,7 @@ mod user_routes;
 mod abc_routes;
 mod session_routes;
 mod system_routes;
+mod recording_routes;
 pub mod ws_routes;
 pub mod health_routes;
 
@@ -37,6 +38,13 @@ use crate::AppState;
         session_routes::create_session,
         session_routes::get_session,
         session_routes::stop_session,
+        recording_routes::list_recordings,
+        recording_routes::get_recording,
+        recording_routes::stream_source,
+        recording_routes::stream_translation,
+        recording_routes::delete_recording,
+        recording_routes::storage_stats,
+        recording_routes::bulk_delete_recordings,
     ),
     components(schemas(
         system_routes::HealthResponse,
@@ -59,6 +67,13 @@ use crate::AppState;
         session_routes::CreateSessionRequest,
         session_routes::SessionResponse,
         session_routes::SessionsListResponse,
+        recording_routes::RecordingResponse,
+        recording_routes::RecordingsListResponse,
+        recording_routes::RecordingMetadataResponse,
+        recording_routes::RecordingEventResponse,
+        recording_routes::StorageStatsResponse,
+        recording_routes::BulkDeleteRequest,
+        recording_routes::BulkDeleteResponse,
     ))
 )]
 pub struct ApiDoc;
@@ -127,6 +142,24 @@ pub fn build_router(state: AppState) -> Router {
         )
         .route_layer(axum_mw::from_fn_with_state(state.clone(), middleware::require_auth));
 
+    let recording_routes_read = Router::new()
+        .route("/", axum::routing::get(recording_routes::list_recordings))
+        .route("/{id}", axum::routing::get(recording_routes::get_recording))
+        .route("/{id}/source", axum::routing::get(recording_routes::stream_source))
+        .route("/{id}/translation", axum::routing::get(recording_routes::stream_translation))
+        .route_layer(axum_mw::from_fn_with_state(state.clone(), middleware::require_auth));
+
+    let recording_routes_admin = Router::new()
+        .route("/{id}", axum::routing::delete(recording_routes::delete_recording))
+        .route("/bulk", axum::routing::delete(recording_routes::bulk_delete_recordings))
+        .route_layer(axum_mw::from_fn_with_state(state.clone(), middleware::require_admin))
+        .route_layer(axum_mw::from_fn_with_state(state.clone(), middleware::require_auth));
+
+    let storage_route = Router::new()
+        .route("/storage", axum::routing::get(recording_routes::storage_stats))
+        .route_layer(axum_mw::from_fn_with_state(state.clone(), middleware::require_admin))
+        .route_layer(axum_mw::from_fn_with_state(state.clone(), middleware::require_auth));
+
     let system_routes = Router::new()
         .route("/health", axum::routing::get(system_routes::health));
 
@@ -150,7 +183,10 @@ pub fn build_router(state: AppState) -> Router {
         .nest("/api/v1/abcs", abc_routes)
         .nest("/api/v1/abc", abc_self_register)
         .nest("/api/v1/sessions", session_routes)
+        .nest("/api/v1/recordings", recording_routes_read)
+        .nest("/api/v1/recordings", recording_routes_admin)
         .nest("/api/v1/system", system_routes)
+        .nest("/api/v1/system", storage_route)
         .nest("/api", openapi_route)
         .merge(ws_routes)
         .merge(abc_status_route)

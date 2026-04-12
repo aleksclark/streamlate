@@ -10,6 +10,8 @@ pub struct AppConfig {
     pub auth: AuthConfig,
     #[serde(default = "default_logging")]
     pub logging: LoggingConfig,
+    #[serde(default = "default_recording")]
+    pub recording: RecordingConfig,
 }
 
 #[derive(Debug, Clone, Deserialize)]
@@ -42,6 +44,16 @@ pub struct LoggingConfig {
     pub format: String,
 }
 
+#[derive(Debug, Clone, Deserialize)]
+pub struct RecordingConfig {
+    #[serde(default = "default_recording_path")]
+    pub path: String,
+    #[serde(default = "default_flush_pages")]
+    pub flush_pages: u32,
+    #[serde(default = "default_fsync_interval_ms")]
+    pub fsync_interval_ms: u64,
+}
+
 fn default_server() -> ServerConfig {
     ServerConfig {
         bind: default_bind(),
@@ -67,6 +79,26 @@ fn default_logging() -> LoggingConfig {
         level: default_log_level(),
         format: default_log_format(),
     }
+}
+
+fn default_recording() -> RecordingConfig {
+    RecordingConfig {
+        path: default_recording_path(),
+        flush_pages: default_flush_pages(),
+        fsync_interval_ms: default_fsync_interval_ms(),
+    }
+}
+
+fn default_recording_path() -> String {
+    "/var/lib/streamlate/recordings".to_string()
+}
+
+fn default_flush_pages() -> u32 {
+    50
+}
+
+fn default_fsync_interval_ms() -> u64 {
+    1000
 }
 
 fn default_bind() -> String {
@@ -113,6 +145,7 @@ impl AppConfig {
             database: default_database(),
             auth: default_auth(),
             logging: default_logging(),
+            recording: default_recording(),
         });
 
         if let Ok(v) = std::env::var("STREAMLATE_BIND") {
@@ -138,6 +171,14 @@ impl AppConfig {
         if let Ok(v) = std::env::var("STREAMLATE_REFRESH_TOKEN_TTL") {
             if let Ok(n) = v.parse() {
                 cfg.auth.refresh_token_ttl_seconds = n;
+            }
+        }
+        if let Ok(v) = std::env::var("STREAMLATE_RECORDING_PATH") {
+            cfg.recording.path = v;
+        }
+        if let Ok(v) = std::env::var("STREAMLATE_RECORDING_FLUSH_PAGES") {
+            if let Ok(n) = v.parse() {
+                cfg.recording.flush_pages = n;
             }
         }
 

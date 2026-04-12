@@ -6,6 +6,9 @@ use webrtc::track::track_local::track_local_static_rtp::TrackLocalStaticRTP;
 use webrtc::track::track_local::TrackLocalWriter;
 use webrtc::track::track_remote::TrackRemote;
 
+use crate::config::RecordingConfig;
+use crate::recording::metadata::RecordingEvent;
+use crate::recording::session_recorder::{SessionRecorderHandle, SessionRecorderConfig, start_session_recorder};
 use crate::signaling::SignalingMessage;
 
 #[derive(Debug)]
@@ -125,7 +128,8 @@ struct ActiveSession {
     #[allow(dead_code)]
     passthrough: bool,
     health: HealthStats,
-    _started_at: Instant,
+    started_at: Instant,
+    recorder: Option<SessionRecorderHandle>,
 }
 
 pub struct SessionManager {
@@ -141,12 +145,13 @@ impl Clone for SessionManager {
 }
 
 impl SessionManager {
-    pub fn new(db: crate::db::Database) -> Self {
+    pub fn new(db: crate::db::Database, recording_config: RecordingConfig) -> Self {
         let (cmd_tx, cmd_rx) = mpsc::unbounded_channel();
         let mgr = SessionManagerActor {
             abcs: HashMap::new(),
             sessions: HashMap::new(),
             db,
+            recording_config,
         };
         tokio::spawn(mgr.run(cmd_rx));
         SessionManager { cmd_tx }
@@ -179,6 +184,7 @@ struct SessionManagerActor {
     abcs: HashMap<String, AbcConnection>,
     sessions: HashMap<String, ActiveSession>,
     db: crate::db::Database,
+    recording_config: RecordingConfig,
 }
 
 impl SessionManagerActor {
@@ -309,6 +315,14 @@ impl SessionManagerActor {
                 if let Some(session) = self.sessions.get_mut(&session_id) {
                     session.muted = muted;
                     tracing::info!("Session {} muted={}", session_id, muted);
+                    if let Some(recorder) = &session.recorder {
+                        let event_type = if muted { "mute" } else { "unmute" };
+                        recorder.send_event(RecordingEvent {
+                            time: session.started_at.elapsed().as_secs_f64(),
+                            event_type: event_type.to_string(),
+                            value: Some(serde_json::Value::Bool(muted)),
+                        });
+                    }
                 }
             }
             SessionCommand::HandlePassthrough {
@@ -318,6 +332,14 @@ impl SessionManagerActor {
                 if let Some(session) = self.sessions.get_mut(&session_id) {
                     session.passthrough = enabled;
                     tracing::info!("Session {} passthrough={}", session_id, enabled);
+                    if let Some(recorder) = &session.recorder {
+                        let event_type = if enabled { "passthrough_on" } else { "passthrough_off" };
+                        recorder.send_event(RecordingEvent {
+                            time: session.started_at.elapsed().as_secs_f64(),
+                            event_type: event_type.to_string(),
+                            value: Some(serde_json::Value::Bool(enabled)),
+                        });
+                    }
                 }
             }
             SessionCommand::GetHealthStats { session_id, reply } => {
@@ -371,6 +393,24 @@ impl SessionManagerActor {
             format!("translator-stream-{}", session_id),
         ));
 
+        let recorder = match start_session_recorder(SessionRecorderConfig {
+            session_id: session_id.clone(),
+            session_name: session_name.clone(),
+            translator_id: String::new(),
+            translator_name: String::new(),
+            abc_id: abc_id.clone(),
+            abc_name: String::new(),
+            recording_path: std::path::PathBuf::from(&self.recording_config.path),
+            flush_pages: self.recording_config.flush_pages,
+            db: self.db.clone(),
+        }) {
+            Ok(r) => Some(r),
+            Err(e) => {
+                tracing::error!("Failed to start recording for session {}: {}", session_id, e);
+                None
+            }
+        };
+
         let session = ActiveSession {
             session_id: session_id.clone(),
             _session_name: session_name,
@@ -383,7 +423,8 @@ impl SessionManagerActor {
             muted: false,
             passthrough: false,
             health: HealthStats::default(),
-            _started_at: Instant::now(),
+            started_at: Instant::now(),
+            recorder,
         };
 
         self.sessions.insert(session_id.clone(), session);
@@ -435,6 +476,21 @@ impl SessionManagerActor {
             None => return,
         };
 
+        let source_recording_tx = self.sessions.get(&session_id).and_then(|s| {
+            s.recorder.as_ref().map(|r| {
+                let (tx, mut rx) = mpsc::unbounded_channel::<Vec<u8>>();
+                let recorder_tx = r.tx.clone();
+                tokio::spawn(async move {
+                    while let Some(data) = rx.recv().await {
+                        let _ = recorder_tx.send(
+                            crate::recording::session_recorder::RecorderMessage::SourcePacket(data),
+                        );
+                    }
+                });
+                tx
+            })
+        });
+
         let sid = session_id.clone();
         let asl = abc_source_local.clone();
 
@@ -442,6 +498,7 @@ impl SessionManagerActor {
             let abc_source_local = asl.clone();
             let source_track_ref = source_track_ref.clone();
             let sid = sid.clone();
+            let rec_tx = source_recording_tx.clone();
 
             Box::pin(async move {
                 tracing::info!(
@@ -453,7 +510,7 @@ impl SessionManagerActor {
                     let mut st = source_track_ref.write().await;
                     *st = Some(track.clone());
                 }
-                Self::forward_rtp(track, abc_source_local).await;
+                Self::forward_rtp(track, abc_source_local, rec_tx).await;
             })
         }));
 
@@ -531,11 +588,27 @@ impl SessionManagerActor {
             return;
         }
 
+        let translation_recording_tx = self.sessions.get(session_id).and_then(|s| {
+            s.recorder.as_ref().map(|r| {
+                let (tx, mut rx) = mpsc::unbounded_channel::<Vec<u8>>();
+                let recorder_tx = r.tx.clone();
+                tokio::spawn(async move {
+                    while let Some(data) = rx.recv().await {
+                        let _ = recorder_tx.send(
+                            crate::recording::session_recorder::RecorderMessage::TranslationPacket(data),
+                        );
+                    }
+                });
+                tx
+            })
+        });
+
         let sid = session_id.to_string();
 
         pc.on_track(Box::new(move |track, _receiver, _transceiver| {
             let translator_source_local = translator_source_local.clone();
             let sid = sid.clone();
+            let rec_tx = translation_recording_tx.clone();
 
             Box::pin(async move {
                 tracing::info!(
@@ -543,7 +616,7 @@ impl SessionManagerActor {
                     sid,
                     track.codec().capability.mime_type
                 );
-                Self::forward_rtp(track, translator_source_local).await;
+                Self::forward_rtp(track, translator_source_local, rec_tx).await;
             })
         }));
 
@@ -715,10 +788,14 @@ impl SessionManagerActor {
     async fn forward_rtp(
         track: Arc<TrackRemote>,
         local_track: Arc<TrackLocalStaticRTP>,
+        recording_tx: Option<mpsc::UnboundedSender<Vec<u8>>>,
     ) {
         loop {
             match track.read_rtp().await {
                 Ok((pkt, _attrs)) => {
+                    if let Some(ref tx) = recording_tx {
+                        let _ = tx.send(pkt.payload.to_vec());
+                    }
                     if let Err(e) = local_track.write_rtp(&pkt).await {
                         let err_str = e.to_string();
                         if err_str.contains("closed") || err_str.contains("ErrClosedPipe") {
@@ -742,6 +819,10 @@ impl SessionManagerActor {
     async fn teardown_session(&mut self, session_id: &str) {
         if let Some(mut session) = self.sessions.remove(session_id) {
             tracing::info!("Tearing down session: {}", session_id);
+
+            if let Some(recorder) = session.recorder.take() {
+                recorder.stop();
+            }
 
             if let Some(abc) = self.abcs.get_mut(&session.abc_id) {
                 let _ = abc.ws_tx.send(SignalingMessage::SessionStop {
