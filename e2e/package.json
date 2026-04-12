@@ -8,7 +8,8 @@
     "test:phase-0": "playwright test tests/phase-0/",
     "test:phase-1": "playwright test tests/phase-1/",
     "test:phase-2": "playwright test tests/phase-2/",
-    "test:phase-3": "playwright test tests/phase-3/"
+    "test:phase-3": "playwright test tests/phase-3/",
+    "test:phase-4": "playwright test tests/phase-4/"
   },
   "devDependencies": {
     "@playwright/test": "^1.52.0",

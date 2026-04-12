@@ -1,10 +1,24 @@
-import { StrictMode } from 'react'
-import { createRoot } from 'react-dom/client'
-import './index.css'
-import App from './App.tsx'
+import { StrictMode } from 'react';
+import { createRoot } from 'react-dom/client';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { SessionPicker } from './pages/SessionPicker';
+import { ListenPage } from './pages/ListenPage';
+import './index.css';
+
+function App() {
+  return (
+    <BrowserRouter>
+      <Routes>
+        <Route path="/listen" element={<SessionPicker />} />
+        <Route path="/listen/:sessionId" element={<ListenPage />} />
+        <Route path="*" element={<Navigate to="/listen" replace />} />
+      </Routes>
+    </BrowserRouter>
+  );
+}
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <App />
-  </StrictMode>,
-)
+  </StrictMode>
+);

@@ -27,6 +27,71 @@ export async function injectSineWave(page: Page, frequency: number): Promise<Ton
   };
 }
 
+export async function detectDominantFrequency(
+  page: Page,
+  timeoutMs: number = 15000
+): Promise<number> {
+  return page.evaluate(
+    async ({ timeoutMs }) => {
+      return new Promise<number>((resolve, reject) => {
+        const timeout = setTimeout(() => reject(new Error('Frequency detection timed out')), timeoutMs);
+
+        const audioEl = document.querySelector('audio') as HTMLAudioElement;
+        if (!audioEl || !audioEl.srcObject) {
+          clearTimeout(timeout);
+          reject(new Error('No audio element or stream'));
+          return;
+        }
+
+        const ctx = new AudioContext();
+        const source = ctx.createMediaStreamSource(audioEl.srcObject as MediaStream);
+        const analyser = ctx.createAnalyser();
+        analyser.fftSize = 8192;
+        source.connect(analyser);
+
+        const bufferLength = analyser.frequencyBinCount;
+        const dataArray = new Float32Array(bufferLength);
+        const sampleRate = ctx.sampleRate;
+        let attempts = 0;
+
+        function check() {
+          attempts++;
+          analyser.getFloatFrequencyData(dataArray);
+
+          let maxVal = -Infinity;
+          let maxIdx = 0;
+          for (let i = 1; i < bufferLength; i++) {
+            if (dataArray[i] > maxVal) {
+              maxVal = dataArray[i];
+              maxIdx = i;
+            }
+          }
+
+          const dominantFreq = (maxIdx * sampleRate) / analyser.fftSize;
+
+          if (maxVal > -60 && dominantFreq > 100) {
+            clearTimeout(timeout);
+            source.disconnect();
+            ctx.close();
+            resolve(dominantFreq);
+          } else if (attempts > 500) {
+            clearTimeout(timeout);
+            source.disconnect();
+            ctx.close();
+            reject(new Error(`Could not detect frequency. Max: ${maxVal.toFixed(1)} dB at ${dominantFreq.toFixed(0)} Hz`));
+          } else {
+            requestAnimationFrame(check);
+          }
+        }
+
+        if (ctx.state === 'suspended') ctx.resume();
+        check();
+      });
+    },
+    { timeoutMs }
+  );
+}
+
 export async function assertAudioFrequency(
   page: Page,
   expectedHz: number,
@@ -133,4 +198,20 @@ export async function assertAudioSilent(
     },
     { thresholdDb, durationMs }
   );
+}
+
+export async function getVUMeterLevel(page: Page): Promise<number> {
+  return page.evaluate(() => {
+    const meter = document.querySelector('[data-testid="vu-meter"]');
+    if (!meter) return -1;
+    return parseFloat(meter.getAttribute('data-level') || '0');
+  });
+}
+
+export async function getVUMeterDb(page: Page): Promise<number> {
+  return page.evaluate(() => {
+    const meter = document.querySelector('[data-testid="vu-meter"]');
+    if (!meter) return -100;
+    return parseFloat(meter.getAttribute('data-rms-db') || '-100');
+  });
 }

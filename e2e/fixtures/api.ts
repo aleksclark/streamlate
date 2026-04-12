@@ -254,6 +254,32 @@ export class StreamlateAPI {
     return this.request('GET', `/api/v1/sessions/${sessionId}`, { token });
   }
 
+  async getSessions(state?: string): Promise<{ items: SessionResponse[] }> {
+    const path = state
+      ? `/api/v1/sessions?state=${state}`
+      : `/api/v1/sessions`;
+    const res = await this.request('GET', path);
+    return res.json();
+  }
+
+  async getSessionPublic(sessionId: string): Promise<Response> {
+    return this.request('GET', `/api/v1/sessions/${sessionId}`);
+  }
+
+  async requestListen(
+    sessionId: string,
+    pin?: string
+  ): Promise<{ signaling_url: string }> {
+    const res = await this.request('POST', `/api/v1/sessions/${sessionId}/listen`, {
+      body: pin ? { pin } : {},
+    });
+    if (res.status !== 200) {
+      const err = await res.json().catch(() => ({ error: { message: `HTTP ${res.status}` } }));
+      throw new Error(err.error?.message || `HTTP ${res.status}`);
+    }
+    return res.json();
+  }
+
   async openapi(): Promise<Response> {
     return this.request('GET', '/api/openapi.json');
   }

@@ -1,30 +1,34 @@
-export function VUMeter({
-  level = -60,
-  label,
-}: {
-  level?: number;
-  label?: string;
-}) {
-  const clamped = Math.max(-60, Math.min(0, level));
-  const pct = ((clamped + 60) / 60) * 100;
+interface VUMeterProps {
+  level: number;
+  rmsDb: number;
+  className?: string;
+}
 
-  const color = pct > 80 ? '#ef4444' : pct > 60 ? '#f59e0b' : '#22c55e';
+export function VUMeter({ level, rmsDb, className = '' }: VUMeterProps) {
+  const segments = 30;
+  const activeSegments = Math.round(level * segments);
 
   return (
-    <div
-      role="meter"
-      aria-valuenow={Math.round(clamped)}
-      aria-valuemin={-60}
-      aria-valuemax={0}
-      aria-label={label}
-      data-level={Math.round(clamped)}
-      className="w-full"
-    >
-      <div className="h-3 rounded bg-gray-700 overflow-hidden">
-        <div
-          className="h-full rounded transition-all duration-75"
-          style={{ width: `${pct}%`, backgroundColor: color }}
-        />
+    <div className={`w-full ${className}`} data-testid="vu-meter" data-level={level} data-rms-db={rmsDb}>
+      <div className="flex gap-0.5 h-8 items-end">
+        {Array.from({ length: segments }, (_, i) => {
+          const active = i < activeSegments;
+          let color = 'bg-green-500';
+          if (i >= segments * 0.75) color = 'bg-red-500';
+          else if (i >= segments * 0.5) color = 'bg-yellow-500';
+
+          return (
+            <div
+              key={i}
+              className={`flex-1 h-full rounded-sm transition-opacity duration-75 ${
+                active ? color : 'bg-gray-200 dark:bg-gray-700'
+              }`}
+            />
+          );
+        })}
+      </div>
+      <div className="text-xs text-gray-500 dark:text-gray-400 mt-1 text-center" data-testid="vu-meter-db">
+        {rmsDb > -100 ? `${rmsDb.toFixed(1)} dB` : '— dB'}
       </div>
     </div>
   );
