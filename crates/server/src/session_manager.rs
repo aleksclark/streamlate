@@ -90,6 +90,9 @@ pub enum SessionCommand {
         abc_id: String,
         reply: tokio::sync::oneshot::Sender<bool>,
     },
+    GetConnectedAbcCount {
+        reply: tokio::sync::oneshot::Sender<usize>,
+    },
 }
 
 #[derive(Debug, Clone, Default)]
@@ -177,6 +180,12 @@ impl SessionManager {
             reply: tx,
         });
         rx.await.unwrap_or(None)
+    }
+
+    pub async fn get_connected_abc_count(&self) -> usize {
+        let (tx, rx) = tokio::sync::oneshot::channel();
+        let _ = self.cmd_tx.send(SessionCommand::GetConnectedAbcCount { reply: tx });
+        rx.await.unwrap_or(0)
     }
 }
 
@@ -349,6 +358,9 @@ impl SessionManagerActor {
             SessionCommand::GetAbcStatus { abc_id, reply } => {
                 let online = self.abcs.contains_key(&abc_id);
                 let _ = reply.send(online);
+            }
+            SessionCommand::GetConnectedAbcCount { reply } => {
+                let _ = reply.send(self.abcs.len());
             }
         }
     }

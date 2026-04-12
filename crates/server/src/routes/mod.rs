@@ -2,8 +2,8 @@ mod auth_routes;
 mod user_routes;
 mod abc_routes;
 mod session_routes;
-mod system_routes;
 mod recording_routes;
+mod system_routes;
 pub mod ws_routes;
 pub mod health_routes;
 
@@ -18,6 +18,7 @@ use crate::AppState;
 #[openapi(
     paths(
         system_routes::health,
+        system_routes::stats,
         auth_routes::login,
         auth_routes::refresh,
         auth_routes::logout,
@@ -48,6 +49,7 @@ use crate::AppState;
     ),
     components(schemas(
         system_routes::HealthResponse,
+        system_routes::SystemStatsResponse,
         auth_routes::LoginRequest,
         auth_routes::LoginResponse,
         auth_routes::RefreshResponse,
@@ -161,7 +163,13 @@ pub fn build_router(state: AppState) -> Router {
         .route_layer(axum_mw::from_fn_with_state(state.clone(), middleware::require_auth));
 
     let system_routes = Router::new()
-        .route("/health", axum::routing::get(system_routes::health));
+        .route("/health", axum::routing::get(system_routes::health))
+        .route(
+            "/stats",
+            axum::routing::get(system_routes::stats)
+                .route_layer(axum_mw::from_fn_with_state(state.clone(), middleware::require_admin))
+                .route_layer(axum_mw::from_fn_with_state(state.clone(), middleware::require_auth)),
+        );
 
     let openapi_route = Router::new()
         .route("/openapi.json", axum::routing::get(serve_openapi));

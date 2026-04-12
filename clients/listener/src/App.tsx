@@ -1,13 +1,15 @@
-function App() {
-  return (
-    <div className="min-h-screen bg-gray-950 text-white flex items-center justify-center">
-      <div className="text-center">
-        <h1 className="text-4xl font-bold mb-4">Streamlate</h1>
-        <p className="text-gray-400 text-lg">Listener Client</p>
-        <p className="text-gray-500 mt-2 text-sm">Phase 0 — Scaffold</p>
-      </div>
-    </div>
-  )
-}
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { ListenPage } from './pages/ListenPage';
+import { SessionPicker } from './pages/SessionPicker';
 
-export default App
+export default function App() {
+  return (
+    <BrowserRouter>
+      <Routes>
+        <Route path="/listen" element={<SessionPicker />} />
+        <Route path="/listen/:sessionId" element={<ListenPage />} />
+        <Route path="*" element={<Navigate to="/listen" replace />} />
+      </Routes>
+    </BrowserRouter>
+  );
+}

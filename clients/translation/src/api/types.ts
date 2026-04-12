@@ -87,6 +87,63 @@ export interface HealthResponse {
   version: string;
 }
 
+export interface UserResponse {
+  id: string;
+  email: string;
+  display_name: string;
+  role: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface UsersListResponse {
+  items: UserResponse[];
+}
+
+export interface CreateUserRequest {
+  email: string;
+  password: string;
+  display_name: string;
+  role: string;
+}
+
+export interface UpdateUserRequest {
+  email?: string;
+  password?: string;
+  display_name?: string;
+  role?: string;
+}
+
+export interface AbcCredentialsResponse {
+  id: string;
+  name: string;
+  secret: string;
+  created_at: string;
+}
+
+export interface CreateAbcRequest {
+  name: string;
+}
+
+export interface UpdateAbcRequest {
+  name: string;
+}
+
+export interface RotateSecretResponse {
+  id: string;
+  secret: string;
+}
+
+export interface SystemStatsResponse {
+  uptime_seconds: number;
+  active_sessions: number;
+  connected_abcs: number;
+  total_users: number;
+  total_abcs: number;
+  total_sessions: number;
+  version: string;
+}
+
 export interface RecordingResponse {
   id: string;
   session_id: string;

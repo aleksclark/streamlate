@@ -38,7 +38,7 @@ export function VUMeter({ level, rmsDb, className = '', label, 'data-testid': te
         })}
       </div>
       <div className="text-xs text-gray-500 dark:text-gray-400 mt-1 text-center" data-testid="vu-meter-db">
-        {rmsDb > -100 ? `${rmsDb.toFixed(1)} dB` : '— dB'}
+        {rmsDb != null && rmsDb > -100 ? `${rmsDb.toFixed(1)} dB` : '— dB'}
       </div>
     </div>
   );
