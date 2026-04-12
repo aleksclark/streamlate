@@ -11,7 +11,9 @@ use axum::middleware as axum_mw;
 use axum::Router;
 use utoipa::OpenApi;
 
+use crate::metrics;
 use crate::middleware;
+use crate::security;
 use crate::AppState;
 
 #[derive(OpenApi)]
@@ -50,6 +52,8 @@ use crate::AppState;
     components(schemas(
         system_routes::HealthResponse,
         system_routes::SystemStatsResponse,
+        system_routes::HealthChecks,
+        system_routes::StatsResponse,
         auth_routes::LoginRequest,
         auth_routes::LoginResponse,
         auth_routes::RefreshResponse,
@@ -171,6 +175,9 @@ pub fn build_router(state: AppState) -> Router {
                 .route_layer(axum_mw::from_fn_with_state(state.clone(), middleware::require_auth)),
         );
 
+    let metrics_route = Router::new()
+        .route("/metrics", axum::routing::get(metrics::metrics_endpoint));
+
     let openapi_route = Router::new()
         .route("/openapi.json", axum::routing::get(serve_openapi));
 
@@ -195,9 +202,12 @@ pub fn build_router(state: AppState) -> Router {
         .nest("/api/v1/recordings", recording_routes_admin)
         .nest("/api/v1/system", system_routes)
         .nest("/api/v1/system", storage_route)
+        .merge(metrics_route)
         .nest("/api", openapi_route)
         .merge(ws_routes)
         .merge(abc_status_route)
+        .layer(axum_mw::from_fn(security::security_headers))
+        .layer(axum_mw::from_fn_with_state(state.clone(), metrics::metrics_middleware))
         .with_state(state)
 }
 

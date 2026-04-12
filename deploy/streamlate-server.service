@@ -1,0 +1,37 @@
+[Unit]
+Description=Streamlate Server - Simultaneous Audio Translation
+Documentation=https://github.com/streamlate/streamlate
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=streamlate
+Group=streamlate
+WorkingDirectory=/opt/streamlate
+ExecStart=/opt/streamlate/bin/streamlate-server --config /opt/streamlate/config/streamlate-server.toml
+Restart=always
+RestartSec=5
+LimitNOFILE=65536
+
+# Environment
+Environment=RUST_LOG=info
+Environment=STREAMLATE_LOG_FORMAT=json
+
+# Security hardening
+NoNewPrivileges=yes
+ProtectSystem=strict
+ProtectHome=yes
+ReadWritePaths=/opt/streamlate/data
+PrivateTmp=yes
+ProtectKernelTunables=yes
+ProtectKernelModules=yes
+ProtectControlGroups=yes
+
+# Logging
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=streamlate-server
+
+[Install]
+WantedBy=multi-user.target

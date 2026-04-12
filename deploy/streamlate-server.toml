@@ -1,0 +1,21 @@
+# Streamlate Server Configuration
+#
+# Copy to /opt/streamlate/config/streamlate-server.toml and adjust values.
+# Environment variables override file values (prefix: STREAMLATE_).
+
+[server]
+bind = "127.0.0.1:8080"
+
+[database]
+path = "/opt/streamlate/data/streamlate.db"
+
+[auth]
+# IMPORTANT: Change this to a long random string in production!
+# Generate with: openssl rand -hex 32
+jwt_secret = "CHANGE-ME-IN-PRODUCTION"
+access_token_ttl_seconds = 900       # 15 minutes
+refresh_token_ttl_seconds = 604800   # 7 days
+
+[logging]
+level = "info"
+format = "json"
