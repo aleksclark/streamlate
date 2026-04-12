@@ -12,6 +12,7 @@ export function Layout({ children }: { children: ReactNode }) {
   const location = useLocation();
 
   const isLoginPage = location.pathname === '/login';
+  const isDark = theme === 'dark';
 
   const handleLogout = () => {
     logout();
@@ -36,6 +37,38 @@ export function Layout({ children }: { children: ReactNode }) {
           >
             Streamlate
           </button>
+
+          <nav className="flex items-center gap-1 ml-6">
+            <button
+              onClick={() => navigate('/')}
+              className={`px-3 py-1.5 text-sm rounded-lg transition-colors ${
+                location.pathname === '/'
+                  ? isDark
+                    ? 'bg-gray-800 text-white'
+                    : 'bg-gray-100 text-gray-900'
+                  : isDark
+                  ? 'text-gray-400 hover:text-gray-200'
+                  : 'text-gray-600 hover:text-gray-900'
+              }`}
+            >
+              Dashboard
+            </button>
+            <button
+              onClick={() => navigate('/recordings')}
+              data-testid="nav-recordings"
+              className={`px-3 py-1.5 text-sm rounded-lg transition-colors ${
+                location.pathname.startsWith('/recordings')
+                  ? isDark
+                    ? 'bg-gray-800 text-white'
+                    : 'bg-gray-100 text-gray-900'
+                  : isDark
+                  ? 'text-gray-400 hover:text-gray-200'
+                  : 'text-gray-600 hover:text-gray-900'
+              }`}
+            >
+              Recordings
+            </button>
+          </nav>
 
           <div className="flex items-center gap-3">
             <button

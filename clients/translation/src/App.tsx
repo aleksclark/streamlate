@@ -4,6 +4,8 @@ import { AuthGuard } from './components/AuthGuard';
 import { LoginPage } from './pages/LoginPage';
 import { DashboardPage } from './pages/DashboardPage';
 import { SessionPage } from './pages/SessionPage';
+import { RecordingsPage } from './pages/RecordingsPage';
+import { PlaybackPage } from './pages/PlaybackPage';
 
 export default function App() {
   return (
@@ -24,6 +26,22 @@ export default function App() {
             element={
               <AuthGuard>
                 <SessionPage />
+              </AuthGuard>
+            }
+          />
+          <Route
+            path="/recordings"
+            element={
+              <AuthGuard>
+                <RecordingsPage />
+              </AuthGuard>
+            }
+          />
+          <Route
+            path="/recordings/:id"
+            element={
+              <AuthGuard>
+                <PlaybackPage />
               </AuthGuard>
             }
           />

@@ -10,6 +10,10 @@ import type {
   SessionListResponse,
   SessionHealthResponse,
   HealthResponse,
+  RecordingsListResponse,
+  RecordingMetadataResponse,
+  StorageStatsResponse,
+  BulkDeleteResponse,
   ApiError,
 } from './types';
 
@@ -193,6 +197,44 @@ export const api = {
     async health(): Promise<HealthResponse> {
       const res = await fetch(`${API_BASE}/system/health`);
       return handleResponse<HealthResponse>(res);
+    },
+  },
+
+  recordings: {
+    list(params?: { session_id?: string; limit?: number; offset?: number }): Promise<RecordingsListResponse> {
+      const qs = new URLSearchParams();
+      if (params?.session_id) qs.set('session_id', params.session_id);
+      if (params?.limit) qs.set('limit', params.limit.toString());
+      if (params?.offset) qs.set('offset', params.offset.toString());
+      const query = qs.toString();
+      return fetchWithAuth<RecordingsListResponse>(`/recordings${query ? `?${query}` : ''}`);
+    },
+
+    get(id: string): Promise<RecordingMetadataResponse> {
+      return fetchWithAuth<RecordingMetadataResponse>(`/recordings/${id}`);
+    },
+
+    sourceUrl(id: string): string {
+      return `${API_BASE}/recordings/${id}/source`;
+    },
+
+    translationUrl(id: string): string {
+      return `${API_BASE}/recordings/${id}/translation`;
+    },
+
+    delete(id: string): Promise<void> {
+      return fetchWithAuth<void>(`/recordings/${id}`, { method: 'DELETE' });
+    },
+
+    bulkDelete(ids: string[]): Promise<BulkDeleteResponse> {
+      return fetchWithAuth<BulkDeleteResponse>('/recordings/bulk', {
+        method: 'DELETE',
+        body: JSON.stringify({ ids }),
+      });
+    },
+
+    storageStats(): Promise<StorageStatsResponse> {
+      return fetchWithAuth<StorageStatsResponse>('/system/storage');
     },
   },
 };

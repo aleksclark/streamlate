@@ -87,6 +87,53 @@ export interface HealthResponse {
   version: string;
 }
 
+export interface RecordingResponse {
+  id: string;
+  session_id: string;
+  session_name: string;
+  duration_seconds: number | null;
+  size_bytes: number | null;
+  state: 'recording' | 'completed' | 'failed';
+  started_at: string;
+  ended_at: string | null;
+  created_at: string;
+}
+
+export interface RecordingsListResponse {
+  items: RecordingResponse[];
+}
+
+export interface RecordingEvent {
+  time: number;
+  type: string;
+  value?: unknown;
+}
+
+export interface RecordingMetadataResponse {
+  id: string;
+  session_id: string;
+  session_name: string;
+  translator_name: string;
+  abc_name: string;
+  duration_seconds: number | null;
+  size_bytes: number | null;
+  state: string;
+  started_at: string;
+  ended_at: string | null;
+  events: RecordingEvent[];
+}
+
+export interface StorageStatsResponse {
+  total_recordings: number;
+  total_size_bytes: number;
+  recording_path: string;
+}
+
+export interface BulkDeleteResponse {
+  deleted: number;
+  requested: number;
+}
+
 export type SignalingMessage =
   | { type: 'welcome'; session_id: string }
   | { type: 'offer'; sdp: string }
