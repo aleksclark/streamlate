@@ -11,6 +11,15 @@ import type {
   SessionHealthResponse,
   HealthResponse,
   ApiError,
+  UserResponse,
+  UsersListResponse,
+  CreateUserRequest,
+  UpdateUserRequest,
+  AbcCredentialsResponse,
+  CreateAbcRequest,
+  UpdateAbcRequest,
+  RotateSecretResponse,
+  SystemStatsResponse,
 } from './types';
 
 const API_BASE = '/api/v1';
@@ -155,6 +164,34 @@ export const api = {
       return fetchWithAuth<AbcListResponse>('/abcs');
     },
 
+    create(data: CreateAbcRequest): Promise<AbcCredentialsResponse> {
+      return fetchWithAuth<AbcCredentialsResponse>('/abcs', {
+        method: 'POST',
+        body: JSON.stringify(data),
+      });
+    },
+
+    get(abcId: string): Promise<AbcListResponse['items'][0]> {
+      return fetchWithAuth('/abcs/' + abcId);
+    },
+
+    update(abcId: string, data: UpdateAbcRequest): Promise<AbcListResponse['items'][0]> {
+      return fetchWithAuth('/abcs/' + abcId, {
+        method: 'PUT',
+        body: JSON.stringify(data),
+      });
+    },
+
+    delete(abcId: string): Promise<void> {
+      return fetchWithAuth('/abcs/' + abcId, { method: 'DELETE' });
+    },
+
+    rotateSecret(abcId: string): Promise<RotateSecretResponse> {
+      return fetchWithAuth<RotateSecretResponse>('/abcs/' + abcId + '/rotate-secret', {
+        method: 'POST',
+      });
+    },
+
     async status(abcId: string): Promise<AbcStatus> {
       const res = await fetch(`${API_BASE}/abcs/${abcId}/status`);
       return handleResponse<AbcStatus>(res);
@@ -193,6 +230,38 @@ export const api = {
     async health(): Promise<HealthResponse> {
       const res = await fetch(`${API_BASE}/system/health`);
       return handleResponse<HealthResponse>(res);
+    },
+
+    stats(): Promise<SystemStatsResponse> {
+      return fetchWithAuth<SystemStatsResponse>('/system/stats');
+    },
+  },
+
+  users: {
+    list(): Promise<UsersListResponse> {
+      return fetchWithAuth<UsersListResponse>('/users');
+    },
+
+    create(data: CreateUserRequest): Promise<UserResponse> {
+      return fetchWithAuth<UserResponse>('/users', {
+        method: 'POST',
+        body: JSON.stringify(data),
+      });
+    },
+
+    get(id: string): Promise<UserResponse> {
+      return fetchWithAuth<UserResponse>('/users/' + id);
+    },
+
+    update(id: string, data: UpdateUserRequest): Promise<UserResponse> {
+      return fetchWithAuth<UserResponse>('/users/' + id, {
+        method: 'PUT',
+        body: JSON.stringify(data),
+      });
+    },
+
+    delete(id: string): Promise<void> {
+      return fetchWithAuth('/users/' + id, { method: 'DELETE' });
     },
   },
 };

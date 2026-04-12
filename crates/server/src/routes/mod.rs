@@ -17,6 +17,7 @@ use crate::AppState;
 #[openapi(
     paths(
         system_routes::health,
+        system_routes::stats,
         auth_routes::login,
         auth_routes::refresh,
         auth_routes::logout,
@@ -59,6 +60,7 @@ use crate::AppState;
         session_routes::CreateSessionRequest,
         session_routes::SessionResponse,
         session_routes::SessionsListResponse,
+        system_routes::SystemStatsResponse,
     ))
 )]
 pub struct ApiDoc;
@@ -128,7 +130,13 @@ pub fn build_router(state: AppState) -> Router {
         .route_layer(axum_mw::from_fn_with_state(state.clone(), middleware::require_auth));
 
     let system_routes = Router::new()
-        .route("/health", axum::routing::get(system_routes::health));
+        .route("/health", axum::routing::get(system_routes::health))
+        .route(
+            "/stats",
+            axum::routing::get(system_routes::stats)
+                .route_layer(axum_mw::from_fn_with_state(state.clone(), middleware::require_admin))
+                .route_layer(axum_mw::from_fn_with_state(state.clone(), middleware::require_auth)),
+        );
 
     let openapi_route = Router::new()
         .route("/openapi.json", axum::routing::get(serve_openapi));

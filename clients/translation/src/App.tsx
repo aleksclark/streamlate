@@ -1,9 +1,17 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { Layout } from './components/Layout';
 import { AuthGuard } from './components/AuthGuard';
+import { AdminGuard } from './components/AdminGuard';
+import { AdminLayout } from './components/AdminLayout';
+import { ToastContainer } from './components/ToastContainer';
 import { LoginPage } from './pages/LoginPage';
 import { DashboardPage } from './pages/DashboardPage';
 import { SessionPage } from './pages/SessionPage';
+import { AdminDashboard } from './pages/admin/AdminDashboard';
+import { AdminUsers } from './pages/admin/AdminUsers';
+import { AdminAbcs } from './pages/admin/AdminAbcs';
+import { AdminSessions } from './pages/admin/AdminSessions';
+import { AdminSettings } from './pages/admin/AdminSettings';
 
 export default function App() {
   return (
@@ -27,9 +35,60 @@ export default function App() {
               </AuthGuard>
             }
           />
+          <Route
+            path="/admin"
+            element={
+              <AuthGuard>
+                <AdminGuard>
+                  <AdminLayout><AdminDashboard /></AdminLayout>
+                </AdminGuard>
+              </AuthGuard>
+            }
+          />
+          <Route
+            path="/admin/users"
+            element={
+              <AuthGuard>
+                <AdminGuard>
+                  <AdminLayout><AdminUsers /></AdminLayout>
+                </AdminGuard>
+              </AuthGuard>
+            }
+          />
+          <Route
+            path="/admin/abcs"
+            element={
+              <AuthGuard>
+                <AdminGuard>
+                  <AdminLayout><AdminAbcs /></AdminLayout>
+                </AdminGuard>
+              </AuthGuard>
+            }
+          />
+          <Route
+            path="/admin/sessions"
+            element={
+              <AuthGuard>
+                <AdminGuard>
+                  <AdminLayout><AdminSessions /></AdminLayout>
+                </AdminGuard>
+              </AuthGuard>
+            }
+          />
+          <Route
+            path="/admin/settings"
+            element={
+              <AuthGuard>
+                <AdminGuard>
+                  <AdminLayout><AdminSettings /></AdminLayout>
+                </AdminGuard>
+              </AuthGuard>
+            }
+          />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </Layout>
+      <ToastContainer />
     </BrowserRouter>
   );
 }

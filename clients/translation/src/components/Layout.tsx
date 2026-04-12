@@ -60,6 +60,21 @@ export function Layout({ children }: { children: ReactNode }) {
 
             {user && (
               <div className="flex items-center gap-3">
+                {user.role === 'admin' && (
+                  <button
+                    onClick={() => navigate(location.pathname.startsWith('/admin') ? '/' : '/admin')}
+                    className={`px-3 py-1.5 text-sm rounded-lg transition-colors ${
+                      location.pathname.startsWith('/admin')
+                        ? 'bg-blue-600 text-white'
+                        : theme === 'dark'
+                          ? 'bg-gray-800 hover:bg-gray-700 text-gray-300'
+                          : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
+                    }`}
+                    data-testid="admin-link"
+                  >
+                    {location.pathname.startsWith('/admin') ? 'Dashboard' : 'Admin'}
+                  </button>
+                )}
                 <span className={`text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>
                   {user.display_name}
                 </span>

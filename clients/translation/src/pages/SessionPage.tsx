@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useSessionStore } from '../stores/sessionStore';
 import { useThemeStore } from '../stores/themeStore';
@@ -7,6 +7,7 @@ import { VUMeter } from '../components/VUMeter';
 import { VolumeSlider } from '../components/VolumeSlider';
 import { ChannelHealth } from '../components/ChannelHealth';
 import { ConnectionStatus } from '../components/ConnectionStatus';
+import { QRCodeSVG } from 'qrcode.react';
 
 function formatDuration(seconds: number): string {
   const h = Math.floor(seconds / 3600);
@@ -183,7 +184,48 @@ export function SessionPage() {
         </div>
 
         <ChannelHealth health={health} />
+
+        <SessionQRCode sessionId={sessionId} isDark={isDark} />
       </div>
     </div>
+  );
+}
+
+function SessionQRCode({ sessionId, isDark }: { sessionId?: string; isDark: boolean }) {
+  const [showQR, setShowQR] = useState(false);
+
+  if (!sessionId) return null;
+
+  const listenerUrl = typeof window !== 'undefined'
+    ? `${window.location.origin}/listen/${sessionId}`
+    : `/listen/${sessionId}`;
+
+  return (
+    <section className={`rounded-lg p-5 ${isDark ? 'bg-gray-900' : 'bg-white border border-gray-200'}`}>
+      <div className="flex items-center justify-between mb-3">
+        <h2 className={`text-sm font-semibold ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
+          Share with Listeners
+        </h2>
+        <button
+          onClick={() => setShowQR(!showQR)}
+          className={`px-3 py-1 text-xs rounded-lg ${
+            isDark ? 'bg-gray-800 hover:bg-gray-700 text-gray-300' : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
+          }`}
+          data-testid="toggle-qr"
+        >
+          {showQR ? 'Hide QR' : 'Show QR'}
+        </button>
+      </div>
+      {showQR && (
+        <div className="text-center" data-testid="session-qr">
+          <div className="bg-white p-4 rounded-lg inline-block mb-2">
+            <QRCodeSVG value={listenerUrl} size={200} />
+          </div>
+          <p className={`text-xs mt-2 font-mono ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
+            {listenerUrl}
+          </p>
+        </div>
+      )}
+    </section>
   );
 }
