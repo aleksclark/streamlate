@@ -1,0 +1,52 @@
+# Streamlate Caddyfile
+#
+# Replace streamlate.example.com with your actual domain.
+# Caddy automatically provisions TLS via Let's Encrypt.
+#
+# Usage:
+#   1. Install Caddy: https://caddyserver.com/docs/install
+#   2. Copy this file to /etc/caddy/Caddyfile
+#   3. Adjust the domain and paths
+#   4. sudo systemctl reload caddy
+
+streamlate.example.com {
+    # API and WebSocket reverse proxy
+    handle /api/* {
+        reverse_proxy localhost:8080
+    }
+
+    handle /ws/* {
+        reverse_proxy localhost:8080
+    }
+
+    # Prometheus metrics (restrict to internal network)
+    handle /metrics {
+        reverse_proxy localhost:8080
+    }
+
+    # Listener client SPA
+    handle /listen/* {
+        root * /opt/streamlate/www/listener
+        try_files {path} /index.html
+        file_server
+    }
+
+    # Translation client SPA (default)
+    handle {
+        root * /opt/streamlate/www/translation
+        try_files {path} /index.html
+        file_server
+    }
+
+    # Security headers (Caddy layer — defense in depth with server-side headers)
+    header {
+        X-Robots-Tag "noindex, nofollow"
+        -Server
+    }
+
+    # Logging
+    log {
+        output file /var/log/caddy/streamlate-access.log
+        format json
+    }
+}
