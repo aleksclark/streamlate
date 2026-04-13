@@ -56,13 +56,30 @@ pub fn load_config() -> anyhow::Result<AbcConfig> {
     if let Ok(url) = std::env::var("ABC_SERVER_URL") {
         let abc_id = std::env::var("ABC_ID").unwrap_or_default();
         let abc_secret = std::env::var("ABC_SECRET").unwrap_or_default();
+        let mut audio = AudioConfig::default();
+        if let Ok(dev) = std::env::var("ABC_CAPTURE_DEVICE") {
+            audio.capture_device = dev;
+        }
+        if let Ok(dev) = std::env::var("ABC_PLAYBACK_DEVICE") {
+            audio.playback_device = dev;
+        }
+        if let Ok(g) = std::env::var("ABC_CAPTURE_GAIN") {
+            if let Ok(v) = g.parse::<f32>() {
+                audio.capture_gain = v;
+            }
+        }
+        if let Ok(g) = std::env::var("ABC_PLAYBACK_GAIN") {
+            if let Ok(v) = g.parse::<f32>() {
+                audio.playback_gain = v;
+            }
+        }
         return Ok(AbcConfig {
             server: ServerConfig { url },
             identity: IdentityConfig {
                 abc_id,
                 abc_secret,
             },
-            audio: AudioConfig::default(),
+            audio,
         });
     }
 

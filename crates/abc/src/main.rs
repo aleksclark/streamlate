@@ -3,6 +3,8 @@ mod signaling;
 mod state_machine;
 mod webrtc_peer;
 
+#[cfg(not(feature = "headless"))]
+mod alsa_audio;
 #[cfg(feature = "headless")]
 mod headless;
 #[cfg(feature = "headless")]

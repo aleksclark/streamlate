@@ -58,7 +58,7 @@ pub async fn run_signaling_loop(
                                     .set_state("session_active", &session_name);
 
                                 let ice_tx_clone = ice_tx.clone();
-                                match webrtc_peer::create_peer_connection(ice_tx_clone).await {
+                                match webrtc_peer::create_peer_connection(ice_tx_clone, cfg.audio.clone()).await {
                                     Ok(pc) => {
                                         let offer = pc.create_and_set_offer().await?;
                                         let offer_msg = serde_json::json!({

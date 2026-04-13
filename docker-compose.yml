@@ -1,0 +1,98 @@
+# docker-compose.yml - Full Streamlate stack with loopback audio
+#
+# Prerequisites:
+#   sudo modprobe snd-aloop pcm_substreams=2
+#
+# Usage:
+#   docker compose up --build
+#
+# Play source audio into the ABC:
+#   ./scripts/play-source.sh media/input.mp3
+#
+# Record translated audio from the ABC:
+#   ./scripts/record-output.sh output.mp3
+#
+# See docker/README.md for full documentation.
+
+services:
+  server:
+    build:
+      context: .
+      dockerfile: e2e/docker/Dockerfile.server
+    ports:
+      - "8080:8080"
+      - "50000-50100:50000-50100/udp"
+    environment:
+      STREAMLATE_JWT_SECRET: "dev-secret-change-me"
+      STREAMLATE_LOG_LEVEL: "info"
+      STREAMLATE_BIND: "0.0.0.0:8080"
+      STREAMLATE_DB_PATH: "/data/streamlate.db"
+      STREAMLATE_RECORDING_DIR: "/recordings"
+    volumes:
+      - server-data:/data
+      - recordings:/recordings
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/api/v1/system/health"]
+      interval: 2s
+      timeout: 5s
+      retries: 30
+
+  translation-client:
+    build:
+      context: .
+      dockerfile: e2e/docker/Dockerfile.translation-client
+    ports:
+      - "3001:80"
+    depends_on:
+      server:
+        condition: service_healthy
+
+  listener-client:
+    build:
+      context: .
+      dockerfile: e2e/docker/Dockerfile.listener-client
+    ports:
+      - "3002:80"
+    depends_on:
+      server:
+        condition: service_healthy
+
+  abc:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.abc
+    depends_on:
+      server:
+        condition: service_healthy
+    environment:
+      ABC_SERVER_URL: "http://server:8080"
+      ABC_ID: "${ABC_ID:-booth-1}"
+      ABC_SECRET: "${ABC_SECRET:-sk_abc_dev}"
+      ABC_CAPTURE_DEVICE: "hw:Loopback,1,0"
+      ABC_PLAYBACK_DEVICE: "hw:Loopback,0,1"
+      STREAMLATE_LOG_LEVEL: "debug"
+    devices:
+      - "/dev/snd:/dev/snd"
+    group_add:
+      - audio
+
+  audio-bridge:
+    image: debian:bookworm
+    command: >
+      bash -c "
+        apt-get update &&
+        apt-get install -y --no-install-recommends ffmpeg alsa-utils sox &&
+        rm -rf /var/lib/apt/lists/* &&
+        echo 'Audio bridge ready. Use docker compose exec to run commands.' &&
+        tail -f /dev/null
+      "
+    devices:
+      - "/dev/snd:/dev/snd"
+    group_add:
+      - audio
+    volumes:
+      - ./media:/media
+
+volumes:
+  server-data:
+  recordings:
