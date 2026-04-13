@@ -8,7 +8,7 @@ name = "streamlate-server"
 path = "src/main.rs"
 
 [dependencies]
-streamlate-common = { path = "../common" }
+streamlate-common = { path = "../common", features = ["openapi"] }
 
 # Async runtime
 tokio = { workspace = true }
