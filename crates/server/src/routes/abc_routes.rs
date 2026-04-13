@@ -49,6 +49,7 @@ pub struct AbcRegisterRequest {
 #[derive(Serialize, ToSchema)]
 pub struct AbcRegisterResponse {
     pub status: String,
+    pub signaling_url: String,
 }
 
 #[derive(Serialize, ToSchema)]
@@ -302,5 +303,6 @@ pub async fn abc_register(
 
     Ok(Json(AbcRegisterResponse {
         status: "registered".to_string(),
+        signaling_url: format!("/ws/abc/{}", body.abc_id),
     }))
 }
