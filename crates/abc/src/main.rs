@@ -188,12 +188,14 @@ async fn register_with_server(cfg: &config::AbcConfig) -> Result<String> {
     let client = reqwest::Client::new();
     let url = format!("{}/api/v1/abc/register", cfg.server.url);
 
+    let req = streamlate_common::api::AbcRegisterRequest {
+        abc_id: cfg.identity.abc_id.clone(),
+        abc_secret: cfg.identity.abc_secret.clone(),
+    };
+
     let resp = client
         .post(&url)
-        .json(&serde_json::json!({
-            "abc_id": cfg.identity.abc_id,
-            "abc_secret": cfg.identity.abc_secret,
-        }))
+        .json(&req)
         .send()
         .await?;
 
@@ -201,23 +203,20 @@ async fn register_with_server(cfg: &config::AbcConfig) -> Result<String> {
         anyhow::bail!("Registration failed: HTTP {}", resp.status());
     }
 
-    let body: serde_json::Value = resp.json().await?;
-    let signaling_path = body["signaling_url"]
-        .as_str()
-        .ok_or_else(|| anyhow::anyhow!("Missing signaling_url"))?;
+    let body: streamlate_common::api::AbcRegisterResponse = resp.json().await?;
 
     let base = &cfg.server.url;
     let ws_url = if base.starts_with("https") {
         format!(
             "wss://{}{}",
             base.trim_start_matches("https://"),
-            signaling_path
+            body.signaling_url
         )
     } else {
         format!(
             "ws://{}{}",
             base.trim_start_matches("http://"),
-            signaling_path
+            body.signaling_url
         )
     };
 
