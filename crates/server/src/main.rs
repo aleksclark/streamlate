@@ -9,7 +9,7 @@ pub mod recording;
 mod security;
 mod metrics;
 pub mod signaling;
-pub mod webrtc_peer;
+pub mod sfu_loop;
 pub mod session_manager;
 
 use crate::config::AppConfig;
@@ -17,6 +17,7 @@ use crate::db::Database;
 use crate::metrics::Metrics;
 use crate::rate_limit::RateLimiter;
 use crate::session_manager::SessionManager;
+use crate::sfu_loop::SfuLoop;
 use clap::Parser;
 use std::sync::Arc;
 use tracing_subscriber::EnvFilter;
@@ -71,8 +72,47 @@ async fn main() -> anyhow::Result<()> {
 
     db::bootstrap::maybe_create_admin(&db)?;
 
+    // Clean up sessions that were active when the server last shut down.
+    // The in-memory session manager is empty on startup, so these sessions
+    // can never complete normally — mark them as failed.
+    {
+        let conn = db.conn().map_err(|e| anyhow::anyhow!(e))?;
+        let now = chrono::Utc::now().to_rfc3339();
+        let cleaned = conn.execute(
+            "UPDATE sessions SET state = 'failed', ended_at = ?1 WHERE state IN ('starting', 'active', 'paused', 'passthrough')",
+            rusqlite::params![now],
+        )?;
+        if cleaned > 0 {
+            tracing::info!("Cleaned up {} stale sessions from previous run", cleaned);
+        }
+    }
+
+    // Create the SFU loop and get command/event channels
+    let (sfu, sfu_cmd_tx, sfu_event_rx) = SfuLoop::new();
+
+    // Spawn the SFU loop. Because str0m's Rtc is !Send, we need a dedicated
+    // single-threaded runtime with a LocalSet.
+    std::thread::spawn(move || {
+        let rt = tokio::runtime::Builder::new_current_thread()
+            .enable_all()
+            .build()
+            .expect("Failed to build SFU runtime");
+        let local = tokio::task::LocalSet::new();
+        local.spawn_local(async move {
+            if let Err(e) = sfu.run().await {
+                tracing::error!("SFU loop error: {}", e);
+            }
+        });
+        rt.block_on(local);
+    });
+
     let rate_limiter = Arc::new(RateLimiter::new());
-    let session_manager = SessionManager::new(db.clone(), cfg.recording.clone());
+    let session_manager = SessionManager::new(
+        db.clone(),
+        cfg.recording.clone(),
+        sfu_cmd_tx,
+        sfu_event_rx,
+    );
     let metrics = Metrics::new();
 
     let recording_path = std::path::Path::new(&cfg.recording.path);
