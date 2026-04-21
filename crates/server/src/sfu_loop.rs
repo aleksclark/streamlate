@@ -239,9 +239,9 @@ impl SfuLoop {
                                         peer_id: *pid,
                                         state,
                                     });
-                                    if state == IceConnectionState::Disconnected {
-                                        peer.rtc.disconnect();
-                                    }
+                                    // Don't disconnect on Disconnected — it's transient.
+                                    // Remote ICE candidates may arrive later and recover.
+                                    // str0m's is_alive() handles the real timeout.
                                 }
                                 Event::MediaAdded(added) => {
                                     tracing::debug!(
