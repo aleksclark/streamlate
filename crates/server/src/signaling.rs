@@ -44,4 +44,13 @@ pub enum SignalingMessage {
     },
     Ping,
     Pong,
+    /// ABC signals it's ready for the server to send an offer.
+    #[serde(rename = "ready")]
+    AbcReady,
+    /// ABC device log forwarding (displayed in translator debug panel).
+    AbcLog {
+        level: String,
+        target: String,
+        message: String,
+    },
 }

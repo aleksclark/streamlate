@@ -28,6 +28,9 @@ services:
       STREAMLATE_BIND: "0.0.0.0:8080"
       STREAMLATE_DB_PATH: "/data/streamlate.db"
       STREAMLATE_RECORDING_DIR: "/recordings"
+      WEBRTC_PUBLIC_IP: "127.0.0.1"
+      WEBRTC_UDP_PORT_MIN: "50000"
+      WEBRTC_UDP_PORT_MAX: "50100"
     volumes:
       - server-data:/data
       - recordings:/recordings
@@ -66,8 +69,8 @@ services:
         condition: service_healthy
     environment:
       ABC_SERVER_URL: "http://server:8080"
-      ABC_ID: "80cfeccc-46ff-4cb8-ae3f-945a00836902"
-      ABC_SECRET: "sk_abc_bb2ee4f4570782495135133ee8b3eb5880733732bef9730dac206fce141aa133"
+      ABC_ID: "6d8f048a-8821-4bdc-9bd7-ef18bf9a3eae"
+      ABC_SECRET: "sk_abc_602f5c3dbb1a9f2284f047a8fe41771ff614b5abffea05e53e8f5780a33ee5bf"
       ABC_CAPTURE_DEVICE: "plughw:Loopback,1,0"
       ABC_PLAYBACK_DEVICE: "plughw:Loopback,0,1"
       STREAMLATE_LOG_LEVEL: "debug"

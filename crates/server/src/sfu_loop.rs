@@ -173,10 +173,25 @@ impl SfuLoop {
         tracing::info!("SFU loop bound to UDP {}", local_addr);
 
         // Determine the public IP to advertise as a host candidate.
+        // 0.0.0.0 is not a valid ICE candidate address, so we must resolve
+        // to a real interface IP if WEBRTC_PUBLIC_IP is not set.
         let public_ip: std::net::IpAddr = std::env::var("WEBRTC_PUBLIC_IP")
             .ok()
             .and_then(|s| s.parse().ok())
-            .unwrap_or(local_addr.ip());
+            .unwrap_or_else(|| {
+                let ip = local_addr.ip();
+                if ip.is_unspecified() {
+                    // Bind a throwaway UDP socket to find the default route IP.
+                    let probe = std::net::UdpSocket::bind("0.0.0.0:0").ok()
+                        .and_then(|s| { s.connect("8.8.8.8:80").ok()?; s.local_addr().ok() })
+                        .map(|a| a.ip())
+                        .unwrap_or(std::net::IpAddr::V4(std::net::Ipv4Addr::LOCALHOST));
+                    tracing::warn!("WEBRTC_PUBLIC_IP not set, detected default route IP: {}", probe);
+                    probe
+                } else {
+                    ip
+                }
+            });
         let candidate_addr = SocketAddr::new(public_ip, local_addr.port());
 
         // ---- state ----------------------------------------------------------
