@@ -65,8 +65,8 @@ time = "0.3"
 # WebSocket
 futures-util = "0.3"
 
-# WebRTC
-webrtc = "0.12"
+# WebRTC (str0m-based SFU)
+str0m = "0.18"
 
 # Recording
 tokio-stream = "0.1"
