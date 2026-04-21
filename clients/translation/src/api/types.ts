@@ -202,7 +202,7 @@ export type SignalingMessage =
   | { type: 'session-stop'; session_id: string }
   | { type: 'mute'; muted: boolean }
   | { type: 'passthrough'; enabled: boolean }
-  | { type: 'health'; latency: number; loss: number; jitter: number }
+  | { type: 'health'; latency_ms: number; packet_loss: number; jitter_ms: number; bitrate_kbps: number }
   | { type: 'error'; code: string; message: string }
   | { type: 'ping' }
   | { type: 'pong' };

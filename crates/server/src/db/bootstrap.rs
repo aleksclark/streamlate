@@ -14,7 +14,8 @@ pub fn maybe_create_admin(db: &Database) -> anyhow::Result<()> {
         return Ok(());
     }
 
-    let password = generate_password();
+    let password = std::env::var("STREAMLATE_ADMIN_PASSWORD")
+        .unwrap_or_else(|_| generate_password());
     let argon2 = Argon2::default();
     let salt = SaltString::generate(&mut OsRng);
     let hash = argon2

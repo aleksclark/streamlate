@@ -9,7 +9,7 @@ test.describe('PIN Flow', () => {
   });
 
   test('PIN-protected session prompts for PIN', async ({ page }) => {
-    const token = await api.login('admin@streamlate.local', 'admin123');
+    const token = await api.login('admin@streamlate.local', 'password');
     const session = await api.createSession(token, {
       session_name: 'PIN Required Session',
       translator_name: 'Translator',
@@ -26,7 +26,7 @@ test.describe('PIN Flow', () => {
   });
 
   test('wrong PIN is rejected', async ({ page }) => {
-    const token = await api.login('admin@streamlate.local', 'admin123');
+    const token = await api.login('admin@streamlate.local', 'password');
     const session = await api.createSession(token, {
       session_name: 'Wrong PIN Test',
       translator_name: 'Translator',
@@ -50,7 +50,7 @@ test.describe('PIN Flow', () => {
   });
 
   test('correct PIN grants access', async ({ page }) => {
-    const token = await api.login('admin@streamlate.local', 'admin123');
+    const token = await api.login('admin@streamlate.local', 'password');
     const session = await api.createSession(token, {
       session_name: 'Correct PIN Test',
       translator_name: 'Translator',
@@ -73,7 +73,7 @@ test.describe('PIN Flow', () => {
   });
 
   test('unprotected session skips PIN prompt', async ({ page }) => {
-    const token = await api.login('admin@streamlate.local', 'admin123');
+    const token = await api.login('admin@streamlate.local', 'password');
     const session = await api.createSession(token, {
       session_name: 'No PIN Session',
       translator_name: 'Translator',

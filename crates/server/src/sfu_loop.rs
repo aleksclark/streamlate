@@ -356,7 +356,7 @@ impl SfuLoop {
                                 Receive {
                                     proto: Protocol::Udp,
                                     source,
-                                    destination: local_addr,
+                                    destination: candidate_addr,
                                     contents,
                                 },
                             );

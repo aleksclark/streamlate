@@ -22,7 +22,11 @@ export function ChannelHealth({ health }: ChannelHealthProps) {
     );
   }
 
-  const qColor = qualityColor(health.latency_ms, health.packet_loss);
+  const latency = health.latency_ms ?? 0;
+  const loss = health.packet_loss ?? 0;
+  const jitter = health.jitter_ms ?? 0;
+  const bitrate = health.bitrate_kbps ?? 0;
+  const qColor = qualityColor(latency, loss);
 
   return (
     <div data-testid="channel-health" className={`rounded-lg p-4 ${
@@ -37,25 +41,25 @@ export function ChannelHealth({ health }: ChannelHealthProps) {
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
         <HealthMetric
           label="Latency"
-          value={`${health.latency_ms}ms`}
-          quality={health.latency_ms < 100 ? 'good' : health.latency_ms < 200 ? 'warning' : 'bad'}
+          value={`${latency}ms`}
+          quality={latency < 100 ? 'good' : latency < 200 ? 'warning' : 'bad'}
           theme={theme}
         />
         <HealthMetric
           label="Packet Loss"
-          value={`${health.packet_loss.toFixed(1)}%`}
-          quality={health.packet_loss < 1 ? 'good' : health.packet_loss < 5 ? 'warning' : 'bad'}
+          value={`${loss.toFixed(1)}%`}
+          quality={loss < 1 ? 'good' : loss < 5 ? 'warning' : 'bad'}
           theme={theme}
         />
         <HealthMetric
           label="Jitter"
-          value={`${health.jitter_ms}ms`}
-          quality={health.jitter_ms < 10 ? 'good' : health.jitter_ms < 30 ? 'warning' : 'bad'}
+          value={`${jitter}ms`}
+          quality={jitter < 10 ? 'good' : jitter < 30 ? 'warning' : 'bad'}
           theme={theme}
         />
         <HealthMetric
           label="Bitrate"
-          value={`${health.bitrate_kbps} kbps`}
+          value={`${bitrate} kbps`}
           quality="good"
           theme={theme}
         />

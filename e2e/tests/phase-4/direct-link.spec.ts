@@ -9,7 +9,7 @@ test.describe('Direct Link', () => {
   });
 
   test('direct link /listen/{id} connects without session picker', async ({ page }) => {
-    const token = await api.login('admin@streamlate.local', 'admin123');
+    const token = await api.login('admin@streamlate.local', 'password');
     const session = await api.createSession(token, {
       session_name: 'Direct Link Test',
       translator_name: 'Test Translator',
@@ -31,7 +31,7 @@ test.describe('Direct Link', () => {
   });
 
   test('direct link with PIN in query string auto-connects', async ({ page }) => {
-    const token = await api.login('admin@streamlate.local', 'admin123');
+    const token = await api.login('admin@streamlate.local', 'password');
     const session = await api.createSession(token, {
       session_name: 'PIN Direct Test',
       translator_name: 'Test',

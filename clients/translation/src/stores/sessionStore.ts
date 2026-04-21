@@ -304,10 +304,10 @@ async function setupConnection(wsUrl: string) {
         set({
           health: {
             session_id: get().session?.id ?? '',
-            latency_ms: msg.latency,
-            packet_loss: msg.loss,
-            jitter_ms: msg.jitter,
-            bitrate_kbps: 32,
+            latency_ms: msg.latency_ms ?? 0,
+            packet_loss: msg.packet_loss ?? 0,
+            jitter_ms: msg.jitter_ms ?? 0,
+            bitrate_kbps: msg.bitrate_kbps ?? 0,
           },
         });
         break;
