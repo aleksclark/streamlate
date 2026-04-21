@@ -234,7 +234,7 @@ impl SfuLoop {
                         Ok(Output::Event(event)) => {
                             match event {
                                 Event::IceConnectionStateChange(state) => {
-                                    tracing::debug!("{}: ICE state -> {:?}", pid, state);
+                                    tracing::info!("{}: ICE state -> {:?}", pid, state);
                                     events_out.push(SfuEvent::IceStateChanged {
                                         peer_id: *pid,
                                         state,
@@ -367,7 +367,7 @@ impl SfuLoop {
                                     peer.rtc.disconnect();
                                 }
                             } else {
-                                tracing::trace!("No peer accepts UDP from {}", source);
+                                tracing::debug!("No peer accepts UDP packet ({} bytes) from {}", n, source);
                             }
                         }
                         Err(e) => {
@@ -392,7 +392,7 @@ impl SfuLoop {
                                 match Candidate::from_sdp_string(&candidate) {
                                     Ok(c) => {
                                         peer.rtc.add_remote_candidate(c);
-                                        tracing::debug!("{}: added remote ICE candidate", peer_id);
+                                        tracing::info!("{}: added remote ICE candidate: {}", peer_id, candidate);
                                     }
                                     Err(e) => {
                                         tracing::warn!(
@@ -478,7 +478,8 @@ fn accept_offer(
     let answer_sdp = answer.to_sdp_string();
 
     peers.insert(peer_id, Peer::new(peer_id, role, rtc));
-    tracing::info!("{}: peer created (role={:?})", peer_id, role);
+    tracing::info!("{}: peer created (role={:?}), answer SDP length={}", peer_id, role, answer_sdp.len());
+    tracing::debug!("{}: answer SDP:\n{}", peer_id, answer_sdp);
 
     Ok(answer_sdp)
 }

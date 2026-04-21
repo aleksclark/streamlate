@@ -28,7 +28,7 @@ services:
       STREAMLATE_BIND: "0.0.0.0:8080"
       STREAMLATE_DB_PATH: "/data/streamlate.db"
       STREAMLATE_RECORDING_DIR: "/recordings"
-      WEBRTC_PUBLIC_IP: "127.0.0.1"
+      WEBRTC_PUBLIC_IP: "192.168.0.22"
       WEBRTC_UDP_PORT_MIN: "50000"
       WEBRTC_UDP_PORT_MAX: "50100"
     volumes:
