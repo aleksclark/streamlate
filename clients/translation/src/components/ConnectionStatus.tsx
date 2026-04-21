@@ -1,6 +1,6 @@
 import type { ConnectionState } from '../stores/sessionStore';
 
-interface ConnectionStatusProps {
+interface ConnectionStatusProps extends React.HTMLAttributes<HTMLDivElement> {
   state: ConnectionState;
 }
 
@@ -12,11 +12,11 @@ const statusConfig: Record<ConnectionState, { label: string; dotColor: string; t
   failed: { label: 'Connection Failed', dotColor: 'bg-red-500', textColor: 'text-red-500' },
 };
 
-export function ConnectionStatus({ state }: ConnectionStatusProps) {
+export function ConnectionStatus({ state, ...rest }: ConnectionStatusProps) {
   const config = statusConfig[state];
 
   return (
-    <div className="flex items-center gap-2">
+    <div data-state={state} {...rest} className={`flex items-center gap-2 ${rest.className || ''}`}>
       <div className={`w-2 h-2 rounded-full ${config.dotColor}`} />
       <span className={`text-xs font-medium ${config.textColor}`}>{config.label}</span>
     </div>

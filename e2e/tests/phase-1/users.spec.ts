@@ -5,6 +5,7 @@ import { execSync } from 'child_process';
 const api = new StreamlateAPI();
 
 function getAdminPassword(): string {
+  if (process.env.ADMIN_PASSWORD) return process.env.ADMIN_PASSWORD;
   const logs = execSync(
     'docker compose -f e2e/docker-compose.yml logs server 2>&1',
     { cwd: process.env.PROJECT_ROOT || '..', encoding: 'utf-8' }

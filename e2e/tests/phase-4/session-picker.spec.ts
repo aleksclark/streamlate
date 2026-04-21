@@ -15,7 +15,7 @@ test.describe('Session Picker', () => {
   });
 
   test('lists active session with correct name and translator', async ({ page }) => {
-    const token = await api.login('admin@streamlate.local', 'admin123');
+    const token = await api.login('admin@streamlate.local', 'password');
     const session = await api.createSession(token, {
       session_name: 'Main Hall — Spanish',
       translator_name: 'Maria Rodriguez',
@@ -33,7 +33,7 @@ test.describe('Session Picker', () => {
   });
 
   test('shows lock icon for PIN-protected sessions', async ({ page }) => {
-    const token = await api.login('admin@streamlate.local', 'admin123');
+    const token = await api.login('admin@streamlate.local', 'password');
     const session = await api.createSession(token, {
       session_name: 'Protected Session',
       translator_name: 'Jean D.',
@@ -50,7 +50,7 @@ test.describe('Session Picker', () => {
   });
 
   test('listen button navigates to session page', async ({ page }) => {
-    const token = await api.login('admin@streamlate.local', 'admin123');
+    const token = await api.login('admin@streamlate.local', 'password');
     const session = await api.createSession(token, {
       session_name: 'Navigate Test',
       translator_name: 'Test User',

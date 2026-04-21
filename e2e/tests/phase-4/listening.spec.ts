@@ -10,7 +10,7 @@ test.describe('Listening', () => {
 
   test.beforeAll(async () => {
     await api.waitReady(30000);
-    token = await api.login('admin@streamlate.local', 'admin123');
+    token = await api.login('admin@streamlate.local', 'password');
   });
 
   test.beforeEach(async () => {

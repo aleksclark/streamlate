@@ -9,7 +9,7 @@ test.describe('Session End', () => {
   });
 
   test('translator ends session → listener sees "session ended" text', async ({ page }) => {
-    const token = await api.login('admin@streamlate.local', 'admin123');
+    const token = await api.login('admin@streamlate.local', 'password');
     const session = await api.createSession(token, {
       session_name: 'Session End Test',
       translator_name: 'Translator',
@@ -26,7 +26,7 @@ test.describe('Session End', () => {
   });
 
   test('ended session shows back-to-sessions button that navigates correctly', async ({ page }) => {
-    const token = await api.login('admin@streamlate.local', 'admin123');
+    const token = await api.login('admin@streamlate.local', 'password');
     const session = await api.createSession(token, {
       session_name: 'End Nav Test',
       translator_name: 'Translator',
@@ -43,7 +43,7 @@ test.describe('Session End', () => {
   });
 
   test('navigating to completed session shows session ended', async ({ page }) => {
-    const token = await api.login('admin@streamlate.local', 'admin123');
+    const token = await api.login('admin@streamlate.local', 'password');
     const session = await api.createSession(token, {
       session_name: 'Already Ended',
       translator_name: 'Translator',
