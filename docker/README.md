@@ -59,6 +59,8 @@ sudo modprobe snd-aloop pcm_substreams=2
 docker compose up --build
 ```
 
+This host-dev path keeps fixed ports 8080 / 3001 / 3002 plus UDP 50000-50100. For parallel worktrees, use the opt-in Stacklane stack instead (`bash scripts/compose-stacklane.sh up`); that path publishes HTTP as `127.0.0.1::<containerPort>` only and leaves this file and the e2e compose stack unchanged.
+
 Services:
 | Service | URL | Description |
 |---------|-----|-------------|
