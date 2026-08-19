@@ -1,0 +1,100 @@
+# Opt-in Stacklane compose stack (HTTP only through Stacklane).
+# Lifecycle: scripts/compose-stacklane.sh (always `docker compose -p streamlate-<instance>`).
+#
+# Publish ONLY 127.0.0.1::<containerPort> for HTTP. Never 0.0.0.0 / fixed host ports / .local.
+# UDP 50000-50100 stays host-published for WebRTC media and cannot go through Stacklane.
+#
+# Existing host-dev path: docker-compose.yml (fixed 8080/3001/3002 + loopback audio).
+# Existing e2e path: e2e/docker-compose.yml (must stay unchanged).
+# Compose project name is set only via `docker compose -p` (never hardcoded here).
+
+services:
+  server:
+    build:
+      context: .
+      dockerfile: e2e/docker/Dockerfile.server
+    environment:
+      STACKLANE_INSTANCE: ${STACKLANE_INSTANCE:-dev}
+      STREAMLATE_JWT_SECRET: "dev-secret-change-me"
+      STREAMLATE_LOG_LEVEL: "info"
+      STREAMLATE_BIND: "0.0.0.0:8080"
+      STREAMLATE_DB_PATH: "/data/streamlate.db"
+      STREAMLATE_RECORDING_DIR: "/recordings"
+      WEBRTC_PUBLIC_IP: "192.168.0.22"
+      WEBRTC_UDP_PORT_MIN: "50000"
+      WEBRTC_UDP_PORT_MAX: "50100"
+    volumes:
+      - server-data:/data
+      - recordings:/recordings
+    ports:
+      - "127.0.0.1::8080"
+      - "50000-50100:50000-50100/udp"
+    labels:
+      stacklane.enable: "true"
+      stacklane.project: "streamlate"
+      stacklane.instance: ${STACKLANE_INSTANCE:-dev}
+      stacklane.endpoint: "api"
+      stacklane.port: "8080"
+      stacklane.target_port: "8080"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://127.0.0.1:8080/api/v1/system/health"]
+      interval: 2s
+      timeout: 5s
+      retries: 30
+    restart: unless-stopped
+
+  translation-client:
+    build:
+      context: .
+      dockerfile: e2e/docker/Dockerfile.translation-client
+    environment:
+      STACKLANE_INSTANCE: ${STACKLANE_INSTANCE:-dev}
+    ports:
+      - "127.0.0.1::80"
+    labels:
+      stacklane.enable: "true"
+      stacklane.project: "streamlate"
+      stacklane.instance: ${STACKLANE_INSTANCE:-dev}
+      stacklane.endpoint: "translation"
+      stacklane.port: "3001"
+      stacklane.target_port: "80"
+    depends_on:
+      server:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1/"]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+      start_period: 20s
+    restart: unless-stopped
+
+  listener-client:
+    build:
+      context: .
+      dockerfile: e2e/docker/Dockerfile.listener-client
+    environment:
+      STACKLANE_INSTANCE: ${STACKLANE_INSTANCE:-dev}
+    ports:
+      - "127.0.0.1::80"
+    labels:
+      stacklane.enable: "true"
+      stacklane.project: "streamlate"
+      stacklane.instance: ${STACKLANE_INSTANCE:-dev}
+      stacklane.endpoint: "listener"
+      stacklane.port: "3002"
+      stacklane.target_port: "80"
+    depends_on:
+      server:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1/"]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+      start_period: 20s
+    restart: unless-stopped
+
+volumes:
+  server-data:
+  recordings:

@@ -127,6 +127,24 @@ npm install
 npx playwright test --project=phase-8
 ```
 
+The e2e stack remains `e2e/docker-compose.yml` and is unchanged by the opt-in Stacklane path.
+
+## Stacklane Compose (opt-in)
+
+Parallel worktrees can use an opt-in HTTP stack with loopback ephemeral publishes. This does **not** replace host `cargo`/`npm`/`vite` or `docker compose -f docker-compose.yml` (loopback audio, fixed 8080/3001/3002).
+
+```bash
+bash scripts/compose-stacklane.sh check
+bash scripts/compose-stacklane.sh up
+bash scripts/compose-stacklane.sh status
+bash scripts/compose-stacklane.sh endpoints
+bash scripts/compose-stacklane.sh logs    # Ctrl-C leaves the stack running
+bash scripts/compose-stacklane.sh down    # never removes volumes
+CONFIRM=streamlate-<instance>-destroy bash scripts/compose-stacklane.sh destroy
+```
+
+Compose project is always `streamlate-${STACKLANE_INSTANCE}`. HTTP endpoints: `api` 8080, `translation` 3001, `listener` 3002. WebRTC UDP 50000-50100 stays host-published and is not proxied by Stacklane; it is a fixed media mapping outside Stacklane's HTTP isolation/proxy claim. If the daemon is absent, direct `127.0.0.1:<ephemeral>` ports still work.
+
 ## Technology Stack
 
 - **Server**: Rust, axum, SQLite (WAL), WebRTC (webrtc-rs)
