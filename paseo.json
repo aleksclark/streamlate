@@ -1,0 +1,11 @@
+{
+  "scripts": {
+    "check": { "command": "bash scripts/compose-stacklane.sh check" },
+    "up": { "command": "bash scripts/compose-stacklane.sh up" },
+    "status": { "command": "bash scripts/compose-stacklane.sh status" },
+    "endpoints": { "command": "bash scripts/compose-stacklane.sh endpoints" },
+    "logs": { "command": "bash scripts/compose-stacklane.sh logs" },
+    "down": { "command": "bash scripts/compose-stacklane.sh down" },
+    "destroy": { "command": "bash scripts/compose-stacklane.sh destroy" }
+  }
+}
